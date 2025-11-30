@@ -81,6 +81,38 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        clinical: {
+          blue: {
+            DEFAULT: "hsl(var(--clinical-blue) / <alpha-value>)",
+            light: "hsl(var(--clinical-blue-light) / <alpha-value>)",
+            dark: "hsl(var(--clinical-blue-dark) / <alpha-value>)",
+          },
+          orange: {
+            DEFAULT: "hsl(var(--clinical-orange) / <alpha-value>)",
+            light: "hsl(var(--clinical-orange-light) / <alpha-value>)",
+            dark: "hsl(var(--clinical-orange-dark) / <alpha-value>)",
+          },
+          green: {
+            DEFAULT: "hsl(var(--clinical-green) / <alpha-value>)",
+            light: "hsl(var(--clinical-green-light) / <alpha-value>)",
+            dark: "hsl(var(--clinical-green-dark) / <alpha-value>)",
+          },
+          gray: {
+            DEFAULT: "hsl(var(--clinical-gray) / <alpha-value>)",
+            light: "hsl(var(--clinical-gray-light) / <alpha-value>)",
+            dark: "hsl(var(--clinical-gray-dark) / <alpha-value>)",
+          },
+          red: {
+            DEFAULT: "hsl(var(--clinical-red) / <alpha-value>)",
+            light: "hsl(var(--clinical-red-light) / <alpha-value>)",
+            dark: "hsl(var(--clinical-red-dark) / <alpha-value>)",
+          },
+          purple: {
+            DEFAULT: "hsl(var(--clinical-purple) / <alpha-value>)",
+            light: "hsl(var(--clinical-purple-light) / <alpha-value>)",
+            dark: "hsl(var(--clinical-purple-dark) / <alpha-value>)",
+          },
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
