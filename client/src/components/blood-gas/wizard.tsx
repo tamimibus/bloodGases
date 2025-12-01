@@ -2,8 +2,7 @@ import { useWizard } from "./wizard-context";
 import { StepIndicator } from "./step-indicator";
 import { Flowchart } from "./flowchart";
 import {
-  StepPH,
-  StepGases,
+  StepInitial,
   StepAnionGap,
   StepOsmolarGap,
   StepCompensation,
@@ -15,19 +14,17 @@ function StepContent() {
 
   switch (currentStep) {
     case 1:
-      return <StepPH />;
+      return <StepInitial />;
     case 2:
-      return <StepGases />;
-    case 3:
       return <StepAnionGap />;
-    case 4:
+    case 3:
       return <StepOsmolarGap />;
-    case 5:
+    case 4:
       return <StepCompensation />;
-    case 6:
+    case 5:
       return <StepDiagnosis />;
     default:
-      return <StepPH />;
+      return <StepInitial />;
   }
 }
 
@@ -39,8 +36,8 @@ export function Wizard() {
       <StepIndicator />
       
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Flowchart - only show on steps 1-5 */}
-        {currentStep < 6 && (
+        {/* Flowchart - only show on steps 1-4 */}
+        {currentStep < 5 && (
           <div className="hidden lg:block">
             <Flowchart />
           </div>

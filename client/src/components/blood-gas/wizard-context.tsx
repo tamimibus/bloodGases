@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback } from "react";
 import type { BloodGasInput, BloodGasInterpretation } from "@shared/schema";
 import { interpretBloodGas } from "@/lib/blood-gas-logic";
 
-export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6;
+export type WizardStep = 1 | 2 | 3 | 4 | 5;
 
 interface WizardContextType {
   currentStep: WizardStep;
@@ -36,7 +36,7 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
     : null;
 
   const goToNextStep = useCallback(() => {
-    setCurrentStep((prev) => Math.min(prev + 1, 6) as WizardStep);
+    setCurrentStep((prev) => Math.min(prev + 1, 5) as WizardStep);
   }, []);
 
   const goToPreviousStep = useCallback(() => {
@@ -51,16 +51,14 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case 1:
-        return input.pH !== undefined;
+        return input.pH !== undefined && input.pCO2 !== undefined && input.HCO3 !== undefined;
       case 2:
-        return input.pCO2 !== undefined && input.HCO3 !== undefined;
-      case 3:
         return input.Na !== undefined && input.Cl !== undefined;
-      case 4:
+      case 3:
         return true; // Osmolar gap is optional
-      case 5:
+      case 4:
         return true; // Compensation is auto-calculated
-      case 6:
+      case 5:
         return true;
       default:
         return false;

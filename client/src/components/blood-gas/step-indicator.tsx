@@ -3,12 +3,11 @@ import { cn } from "@/lib/utils";
 import { useWizard } from "./wizard-context";
 
 const steps = [
-  { number: 1, title: "pH Analysis", shortTitle: "pH" },
-  { number: 2, title: "pCO₂ & HCO₃⁻", shortTitle: "Gases" },
-  { number: 3, title: "Anion Gap", shortTitle: "AG" },
-  { number: 4, title: "Osmolar Gap", shortTitle: "OG" },
-  { number: 5, title: "Compensation", shortTitle: "Comp" },
-  { number: 6, title: "Diagnosis", shortTitle: "Result" },
+  { number: 1, title: "Initial Values", shortTitle: "Values" },
+  { number: 2, title: "Anion Gap", shortTitle: "AG" },
+  { number: 3, title: "Osmolar Gap", shortTitle: "OG" },
+  { number: 4, title: "Compensation", shortTitle: "Comp" },
+  { number: 5, title: "Diagnosis", shortTitle: "Result" },
 ];
 
 export function StepIndicator() {
@@ -17,15 +16,13 @@ export function StepIndicator() {
   const isStepComplete = (stepNumber: number) => {
     switch (stepNumber) {
       case 1:
-        return input.pH !== undefined;
+        return input.pH !== undefined && input.pCO2 !== undefined && input.HCO3 !== undefined;
       case 2:
-        return input.pCO2 !== undefined && input.HCO3 !== undefined;
-      case 3:
         return input.Na !== undefined && input.Cl !== undefined;
+      case 3:
+        return currentStep > 3;
       case 4:
         return currentStep > 4;
-      case 5:
-        return currentStep > 5;
       default:
         return false;
     }
@@ -68,7 +65,7 @@ export function StepIndicator() {
                   )}
 
                   <button
-                    onClick={() => isClickable && setCurrentStep(step.number as 1 | 2 | 3 | 4 | 5 | 6)}
+                    onClick={() => isClickable && setCurrentStep(step.number as 1 | 2 | 3 | 4 | 5)}
                     disabled={!isClickable}
                     className={cn(
                       "flex flex-col items-center gap-1 w-full transition-all duration-200",
