@@ -314,25 +314,6 @@ export function StepAnionGap() {
           </Form>
         </CardContent>
       </Card>
-
-      {/* Causes Reference */}
-      {agStatusInfo && agStatusInfo.causes.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Potential Causes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="grid gap-2 md:grid-cols-2 text-sm">
-              {agStatusInfo.causes.slice(0, 8).map((cause, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">•</span>
-                  <span>{cause}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

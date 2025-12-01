@@ -339,33 +339,6 @@ export function StepInitial() {
           </Form>
         </CardContent>
       </Card>
-
-      {/* Educational Info */}
-      <Card className="bg-muted/30">
-        <CardContent className="pt-6">
-          <h3 className="font-semibold mb-3">Understanding Initial Blood Gas Values</h3>
-          <div className="grid gap-4 md:grid-cols-3 text-sm">
-            <div className="space-y-1">
-              <p className="font-medium text-clinical-red">pH</p>
-              <p className="text-muted-foreground">
-                Indicates acidaemia (&lt;7.35), normal (7.35-7.45), or alkalaemia (&gt;7.45)
-              </p>
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium text-clinical-blue">pCO₂</p>
-              <p className="text-muted-foreground">
-                Respiratory parameter. High = CO2 retention, Low = hyperventilation
-              </p>
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium text-clinical-orange">HCO₃⁻</p>
-              <p className="text-muted-foreground">
-                Metabolic parameter. Low = loss of base, High = retention of base
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

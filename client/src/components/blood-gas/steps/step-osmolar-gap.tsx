@@ -343,29 +343,6 @@ export function StepOsmolarGap() {
           </Form>
         </CardContent>
       </Card>
-
-      {/* Educational Info */}
-      <Card className="bg-muted/30">
-        <CardContent className="pt-6">
-          <h3 className="font-semibold mb-3">Causes of Elevated Osmolar Gap</h3>
-          <div className="grid gap-3 md:grid-cols-2 text-sm">
-            <div className="flex items-start gap-2">
-              <span className="text-clinical-red font-bold">•</span>
-              <div>
-                <p className="font-medium">Toxic Alcohols</p>
-                <p className="text-muted-foreground">Methanol, ethylene glycol, isopropanol</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-clinical-orange font-bold">•</span>
-              <div>
-                <p className="font-medium">Other Osmoles</p>
-                <p className="text-muted-foreground">Mannitol, glycine, maltose, propylene glycol</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

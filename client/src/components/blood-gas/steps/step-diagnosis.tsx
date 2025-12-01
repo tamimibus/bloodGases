@@ -334,16 +334,6 @@ export function StepDiagnosis() {
           New Analysis
         </Button>
       </div>
-
-      {/* Disclaimer */}
-      <Card className="bg-muted/30">
-        <CardContent className="py-4">
-          <p className="text-xs text-muted-foreground text-center">
-            This tool is for educational purposes only and should not replace clinical judgment.
-            Always correlate with patient history, physical examination, and other investigations.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
