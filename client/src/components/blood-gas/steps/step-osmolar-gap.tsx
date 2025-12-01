@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ValueRangeIndicator } from "../value-range-indicator";
 import { useWizard } from "../wizard-context";
 import { calculateOsmolarGap } from "@/lib/blood-gas-logic";
 import { cn } from "@/lib/utils";
@@ -149,6 +150,20 @@ export function StepOsmolarGap() {
                   )}
                 />
 
+                {watchedMeasuredOsm !== undefined && (
+                  <div className="pt-2">
+                    <ValueRangeIndicator
+                      value={watchedMeasuredOsm}
+                      min={200}
+                      max={400}
+                      normalLow={280}
+                      normalHigh={295}
+                      unit=" mOsm/kg"
+                      label="Measured Osmolality"
+                    />
+                  </div>
+                )}
+
                 {/* Glucose */}
                 <FormField
                   control={form.control}
@@ -177,6 +192,20 @@ export function StepOsmolarGap() {
                     </FormItem>
                   )}
                 />
+
+                {watchedGlucose !== undefined && (
+                  <div className="pt-2">
+                    <ValueRangeIndicator
+                      value={watchedGlucose}
+                      min={0}
+                      max={50}
+                      normalLow={3.9}
+                      normalHigh={6.1}
+                      unit=" mmol/L"
+                      label="Glucose"
+                    />
+                  </div>
+                )}
 
                 {/* Urea */}
                 <FormField
@@ -207,6 +236,20 @@ export function StepOsmolarGap() {
                   )}
                 />
 
+                {watchedUrea !== undefined && (
+                  <div className="pt-2">
+                    <ValueRangeIndicator
+                      value={watchedUrea}
+                      min={0}
+                      max={100}
+                      normalLow={2.5}
+                      normalHigh={7.1}
+                      unit=" mmol/L"
+                      label="Urea"
+                    />
+                  </div>
+                )}
+
                 {/* Ethanol */}
                 <FormField
                   control={form.control}
@@ -235,6 +278,20 @@ export function StepOsmolarGap() {
                     </FormItem>
                   )}
                 />
+
+                {watchedEthanol !== undefined && watchedEthanol > 0 && (
+                  <div className="pt-2">
+                    <ValueRangeIndicator
+                      value={watchedEthanol}
+                      min={0}
+                      max={100}
+                      normalLow={0}
+                      normalHigh={0}
+                      unit=" mmol/L"
+                      label="Ethanol"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Calculation Result */}

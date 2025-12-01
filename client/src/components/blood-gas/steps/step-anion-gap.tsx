@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ValueRangeIndicator } from "../value-range-indicator";
 import { useWizard } from "../wizard-context";
 import { normalRanges, metabolicAcidosisCauses } from "@shared/schema";
 import { calculateAnionGap } from "@/lib/blood-gas-logic";
@@ -165,6 +166,20 @@ export function StepAnionGap() {
                   )}
                 />
 
+                {watchedNa !== undefined && (
+                  <div className="pt-2">
+                    <ValueRangeIndicator
+                      value={watchedNa}
+                      min={100}
+                      max={180}
+                      normalLow={normalRanges.Na.low}
+                      normalHigh={normalRanges.Na.high}
+                      unit=" mmol/L"
+                      label="Na⁺"
+                    />
+                  </div>
+                )}
+
                 {/* Cl Input */}
                 <FormField
                   control={form.control}
@@ -195,6 +210,20 @@ export function StepAnionGap() {
                   )}
                 />
 
+                {watchedCl !== undefined && (
+                  <div className="pt-2">
+                    <ValueRangeIndicator
+                      value={watchedCl}
+                      min={70}
+                      max={130}
+                      normalLow={normalRanges.Cl.low}
+                      normalHigh={normalRanges.Cl.high}
+                      unit=" mmol/L"
+                      label="Cl⁻"
+                    />
+                  </div>
+                )}
+
                 {/* Albumin Input (Optional) */}
                 <FormField
                   control={form.control}
@@ -223,6 +252,20 @@ export function StepAnionGap() {
                     </FormItem>
                   )}
                 />
+
+                {watchedAlbumin !== undefined && (
+                  <div className="pt-2">
+                    <ValueRangeIndicator
+                      value={watchedAlbumin}
+                      min={1}
+                      max={6}
+                      normalLow={3.5}
+                      normalHigh={5.0}
+                      unit=" g/dL"
+                      label="Albumin"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Calculation Result */}
