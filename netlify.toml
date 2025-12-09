@@ -1,13 +1,9 @@
 [build]
   command = "npm run build"
-  publish = "dist/public"  # Client assets for CDN
-  
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/index"
-  status = 200
-  force = true
+  publish = "dist/public"
 
-[functions]
-  node_bundler = "esbuild"
-  external_node_modules = []  # Bundle everything
+[[redirects]]
+  # SPA routing - send all paths to index.html
+  from = "/*"
+  to = "/index.html"
+  status = 200
