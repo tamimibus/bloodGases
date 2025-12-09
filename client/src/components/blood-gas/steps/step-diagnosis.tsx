@@ -130,8 +130,8 @@ export function StepDiagnosis() {
                   <p className={cn(
                     "text-xl font-bold font-mono",
                     input.pH < normalRanges.pH.low ? "text-clinical-red" :
-                    input.pH > normalRanges.pH.high ? "text-clinical-orange" :
-                    "text-clinical-green"
+                      input.pH > normalRanges.pH.high ? "text-clinical-orange" :
+                        "text-clinical-green"
                   )}>
                     {input.pH.toFixed(2)}
                   </p>
@@ -146,8 +146,8 @@ export function StepDiagnosis() {
                   <p className={cn(
                     "text-xl font-bold font-mono",
                     input.pCO2 < normalRanges.pCO2.low ? "text-clinical-blue" :
-                    input.pCO2 > normalRanges.pCO2.high ? "text-clinical-blue" :
-                    "text-clinical-green"
+                      input.pCO2 > normalRanges.pCO2.high ? "text-clinical-blue" :
+                        "text-clinical-green"
                   )}>
                     {input.pCO2} mmHg
                   </p>
@@ -162,8 +162,8 @@ export function StepDiagnosis() {
                   <p className={cn(
                     "text-xl font-bold font-mono",
                     input.HCO3 < normalRanges.HCO3.low ? "text-clinical-orange" :
-                    input.HCO3 > normalRanges.HCO3.high ? "text-clinical-orange" :
-                    "text-clinical-green"
+                      input.HCO3 > normalRanges.HCO3.high ? "text-clinical-orange" :
+                        "text-clinical-green"
                   )}>
                     {input.HCO3} mmol/L
                   </p>
@@ -197,11 +197,11 @@ export function StepDiagnosis() {
                     <p className={cn(
                       "font-medium",
                       interpretation.anionGap.status === "high" ? "text-clinical-red" :
-                      interpretation.anionGap.status === "normal" ? "text-clinical-green" :
-                      "text-clinical-purple"
+                        interpretation.anionGap.status === "normal" ? "text-clinical-green" :
+                          "text-clinical-purple"
                     )}>
                       Status: {interpretation.anionGap.status === "high" ? "Elevated" :
-                               interpretation.anionGap.status === "normal" ? "Normal" : "Low/Negative"} Anion Gap
+                        interpretation.anionGap.status === "normal" ? "Normal" : "Low/Negative"} Anion Gap
                     </p>
                   </div>
                 </AccordionContent>
@@ -217,7 +217,7 @@ export function StepDiagnosis() {
                     <Badge variant="outline" className={cn(
                       "ml-2",
                       interpretation.wintersFormula.status === "appropriate" ? "border-clinical-green text-clinical-green" :
-                      "border-clinical-orange text-clinical-orange"
+                        "border-clinical-orange text-clinical-orange"
                     )}>
                       {interpretation.wintersFormula.status === "appropriate" ? "Appropriate" : "Abnormal"}
                     </Badge>
@@ -231,7 +231,7 @@ export function StepDiagnosis() {
                     </p>
                     {interpretation.wintersFormula.status !== "appropriate" && (
                       <p className="text-clinical-orange">
-                        {interpretation.wintersFormula.status === "excessive" 
+                        {interpretation.wintersFormula.status === "excessive"
                           ? "Concurrent respiratory alkalosis likely"
                           : "Concurrent respiratory acidosis likely"}
                       </p>
@@ -283,7 +283,7 @@ export function StepDiagnosis() {
                       Calculated: <span className="font-mono">{interpretation.osmolarGap.calculatedOsmolality.toFixed(1)}</span>
                     </p>
                     <p className={interpretation.osmolarGap.isElevated ? "text-clinical-red font-medium" : "text-clinical-green"}>
-                      {interpretation.osmolarGap.isElevated 
+                      {interpretation.osmolarGap.isElevated
                         ? "Elevated - consider toxic alcohols"
                         : "Normal osmolar gap"}
                     </p>

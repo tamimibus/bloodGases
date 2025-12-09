@@ -19,12 +19,13 @@ import { useWizard } from "../wizard-context";
 import { normalRanges } from "@shared/schema";
 import { determinePrimaryDisorder, formatDisorderName } from "@/lib/blood-gas-logic";
 import { cn } from "@/lib/utils";
+import { SidebarMenuButton } from "@/components/ui/sidebar";
 
 const initialSchema = z.object({
   pH: z.coerce
     .number()
-    .min(6.8, "pH must be at least 6.8")
-    .max(7.8, "pH must be at most 7.8"),
+    .min(0, "pH must be at least 6.8")
+    .max(14, "pH must be at most 7.8"),
   pCO2: z.coerce
     .number()
     .min(10, "pCO2 must be at least 10 mmHg")
@@ -137,6 +138,7 @@ export function StepInitial() {
 
   return (
     <div className="space-y-6">
+      {/* <SidebarMenuButton /> */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -169,8 +171,25 @@ export function StepInitial() {
                         className="text-2xl h-14 font-mono"
                         data-testid="input-ph"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                        onChange={(e) => {
+
+                          field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
+
+                        }}
                         value={field.value ?? ""}
+                        tooltip=" Good —  is within the 6.8 - 7.8 "
+                        onMouseEnter={(e) => {
+                          console.log("tamimi", field, e)
+                          const val = field.value;
+                          if (val !== undefined && (val < 6.8 || val > 7.8)) {
+                            console.log("tamimi222", field, e)
+                            e.currentTarget.title = `Value must be between ${6.8} and ${7.8}`;
+                          } else {
+                            e.currentTarget.title = "";
+                          }
+                        }}
+
+
                       />
                     </FormControl>
                     <FormDescription>
@@ -186,8 +205,8 @@ export function StepInitial() {
                 <div className="pt-2">
                   <ValueRangeIndicator
                     value={watchedPH}
-                    min={6.8}
-                    max={7.8}
+                    min={0}
+                    max={14}
                     normalLow={normalRanges.pH.low}
                     normalHigh={normalRanges.pH.high}
                     unit=""
@@ -197,7 +216,7 @@ export function StepInitial() {
               )}
 
               {/* pH Interpretation */}
-              {phInterpretation && (
+              {/* {phInterpretation && (
                 <div
                   className={`p-4 rounded-lg border-l-4 ${phInterpretation.bgColor} ${phInterpretation.borderColor}`}
                   data-testid="ph-interpretation"
@@ -209,7 +228,7 @@ export function StepInitial() {
                     {phInterpretation.description}
                   </p>
                 </div>
-              )}
+              )} */}
 
               {/* Gases Section */}
               <div className="pt-4 border-t">
@@ -234,6 +253,7 @@ export function StepInitial() {
                               className="text-xl h-12 font-mono"
                               data-testid="input-pco2"
                               {...field}
+                              tooltip=" Good —  is within the 10 - 100"
                               onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                               value={field.value ?? ""}
                             />
@@ -278,11 +298,13 @@ export function StepInitial() {
                               className="text-xl h-12 font-mono"
                               data-testid="input-hco3"
                               {...field}
+                              tooltip=" Good —  is within the 10- 42"
                               onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                               value={field.value ?? ""}
                             />
                           </FormControl>
                           <FormDescription>
+                            HC03 “the measured Bicarbonate, please obtain the result from the chemistry”
                             Normal: {normalRanges.HCO3.low} - {normalRanges.HCO3.high} {normalRanges.HCO3.unit}
                           </FormDescription>
                           <FormMessage />
@@ -306,7 +328,7 @@ export function StepInitial() {
               </div>
 
               {/* Preliminary Disorder Display */}
-              {preliminaryDisorder && disorderInfo && (
+              {/* {preliminaryDisorder && disorderInfo && (
                 <div
                   className={cn(
                     "p-4 rounded-lg border-l-4",
@@ -322,7 +344,7 @@ export function StepInitial() {
                     {disorderInfo.description}
                   </p>
                 </div>
-              )}
+              )} */}
 
               <div className="flex justify-end pt-4">
                 <Button
@@ -331,7 +353,7 @@ export function StepInitial() {
                   disabled={!isComplete}
                   data-testid="button-next-step"
                 >
-                  Next Step
+                  Next Step tamimi tt
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>

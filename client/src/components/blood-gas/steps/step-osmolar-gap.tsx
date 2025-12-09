@@ -75,9 +75,9 @@ export function StepOsmolarGap() {
   // Calculate osmolar gap if we have required values
   const osmolarGapResult =
     watchedMeasuredOsm !== undefined &&
-    input.Na !== undefined &&
-    watchedGlucose !== undefined &&
-    watchedUrea !== undefined
+      input.Na !== undefined &&
+      watchedGlucose !== undefined &&
+      watchedUrea !== undefined
       ? calculateOsmolarGap(watchedMeasuredOsm, input.Na, watchedGlucose, watchedUrea, watchedEthanol)
       : null;
 
@@ -332,7 +332,7 @@ export function StepOsmolarGap() {
                   </div>
 
                   {/* Interpretation */}
-                  <div
+                  {/* <div
                     className={cn(
                       "p-4 rounded-lg border-l-4 flex items-start gap-3",
                       osmolarGapResult.isElevated
@@ -359,7 +359,7 @@ export function StepOsmolarGap() {
                           : "Normal osmolar gap. Toxic alcohol ingestion is less likely, but cannot be completely excluded in early or late presentations."}
                       </p>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
 

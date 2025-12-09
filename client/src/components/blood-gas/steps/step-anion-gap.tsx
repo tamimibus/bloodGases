@@ -296,8 +296,8 @@ export function StepAnionGap() {
                         <p className={cn(
                           "text-3xl font-bold font-mono",
                           anionGapResult.status === "high" ? "text-clinical-red" :
-                          anionGapResult.status === "normal" ? "text-clinical-green" :
-                          "text-clinical-purple"
+                            anionGapResult.status === "normal" ? "text-clinical-green" :
+                              "text-clinical-purple"
                         )}>
                           {anionGapResult.correctedValue.toFixed(1)}
                         </p>
@@ -307,7 +307,7 @@ export function StepAnionGap() {
                   </div>
 
                   {/* Status Interpretation */}
-                  {agStatusInfo && (
+                  {/* {agStatusInfo && (
                     <div
                       className={cn(
                         "p-4 rounded-lg border-l-4",
@@ -328,7 +328,7 @@ export function StepAnionGap() {
                         {agStatusInfo.description}
                       </p>
                     </div>
-                  )}
+                  )} */}
                 </div>
               )}
 

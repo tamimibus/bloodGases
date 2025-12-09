@@ -205,7 +205,7 @@ export function StepGases() {
               </div>
 
               {/* Preliminary Disorder Display */}
-              {preliminaryDisorder && disorderInfo && (
+              {/* {preliminaryDisorder && disorderInfo && (
                 <div
                   className={cn(
                     "p-4 rounded-lg border-l-4",
@@ -221,7 +221,7 @@ export function StepGases() {
                     {disorderInfo.description}
                   </p>
                 </div>
-              )}
+              )} */}
 
               <div className="flex justify-between pt-4">
                 <Button
@@ -260,7 +260,7 @@ export function StepGases() {
                 <div>
                   <p className="font-medium">Respiratory Disorders</p>
                   <p className="text-muted-foreground">
-                    Primary change in pCO₂. High pCO₂ (hypoventilation) = acidosis. 
+                    Primary change in pCO₂. High pCO₂ (hypoventilation) = acidosis.
                     Low pCO₂ (hyperventilation) = alkalosis.
                   </p>
                 </div>
@@ -272,7 +272,7 @@ export function StepGases() {
                 <div>
                   <p className="font-medium">Metabolic Disorders</p>
                   <p className="text-muted-foreground">
-                    Primary change in HCO₃⁻. Low HCO₃⁻ = acidosis. 
+                    Primary change in HCO₃⁻. Low HCO₃⁻ = acidosis.
                     High HCO₃⁻ = alkalosis.
                   </p>
                 </div>
