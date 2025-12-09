@@ -75,6 +75,18 @@ app.use((req, res, next) => {
   // doesn't interfere with the other routes
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
+    // const distPath = path.join(process.cwd(), "dist");
+    // console.log(`Serving static from: ${distPath}`);
+
+    // const fs = require("fs");
+    // if (!fs.existsSync(distPath)) {
+    //   throw new Error(`dist not found: ${distPath}`);
+    // }
+
+    // app.use(express.static(distPath));
+    // app.use("*", (req, res) => {
+    //   res.sendFile(path.join(distPath, "index.html"));
+    // });
   } else {
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
@@ -84,15 +96,21 @@ app.use((req, res, next) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
+  // Replace listen block with:
   const port = parseInt(process.env.PORT || "3000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
+  httpServer.listen(port, "0.0.0.0", () => {
+    log(`Server running on http://localhost:${port}`);
+  });
+
+  // const port = parseInt(process.env.PORT || "3000", 10);
+  // httpServer.listen(
+  //   {
+  //     port,
+  //     host: "0.0.0.0",
+  //     // reusePort: true,
+  //   },
+  //   () => {
+  //     log(`serving on port ${port}`);
+  //   },
+  // );
 })();
