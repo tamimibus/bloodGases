@@ -5,7 +5,6 @@ import {
   StepInitial,
   StepAnionGap,
   StepOsmolarGap,
-  StepCompensation,
   StepDiagnosis,
 } from "./steps";
 
@@ -20,8 +19,6 @@ function StepContent() {
     case 3:
       return <StepOsmolarGap />;
     case 4:
-      return <StepCompensation />;
-    case 5:
       return <StepDiagnosis />;
     default:
       return <StepInitial />;

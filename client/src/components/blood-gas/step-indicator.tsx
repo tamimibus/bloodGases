@@ -6,12 +6,11 @@ const steps = [
   { number: 1, title: "Initial Values", shortTitle: "Values" },
   { number: 2, title: "Anion Gap", shortTitle: "AG" },
   { number: 3, title: "Osmolar Gap", shortTitle: "OG" },
-  { number: 4, title: "Compensation", shortTitle: "Comp" },
-  { number: 5, title: "Diagnosis", shortTitle: "Result" },
+  { number: 4, title: "Diagnosis", shortTitle: "Result" },
 ];
 
 export function StepIndicator() {
-  const { currentStep, setCurrentStep, input } = useWizard();
+  const { currentStep, setCurrentStep, input, isAnionGapStepRelevant } = useWizard();
 
   const isStepComplete = (stepNumber: number) => {
     switch (stepNumber) {
@@ -22,13 +21,15 @@ export function StepIndicator() {
       case 3:
         return currentStep > 3;
       case 4:
-        return currentStep > 4;
+        return currentStep === 4;
       default:
         return false;
     }
   };
 
   const canClickStep = (stepNumber: number) => {
+    if (stepNumber === 2 && !isAnionGapStepRelevant()) return false;
+
     if (stepNumber === 1) return true;
     if (stepNumber <= currentStep) return true;
     // Can only go to next step if current is complete
@@ -65,7 +66,7 @@ export function StepIndicator() {
                   )}
 
                   <button
-                    onClick={() => isClickable && setCurrentStep(step.number as 1 | 2 | 3 | 4 | 5)}
+                    onClick={() => isClickable && setCurrentStep(step.number as 1 | 2 | 3 | 4)}
                     disabled={!isClickable}
                     className={cn(
                       "flex flex-col items-center gap-1 w-full transition-all duration-200",
@@ -80,10 +81,10 @@ export function StepIndicator() {
                         isComplete && !isCurrent
                           ? "bg-clinical-green text-white"
                           : isCurrent
-                          ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
-                          : isUpcoming
-                          ? "bg-muted text-muted-foreground border-2 border-dashed border-muted-foreground/40"
-                          : "bg-muted text-muted-foreground"
+                            ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                            : isUpcoming
+                              ? "bg-muted text-muted-foreground border-2 border-dashed border-muted-foreground/40"
+                              : "bg-muted text-muted-foreground"
                       )}
                     >
                       {isComplete && !isCurrent ? (
@@ -100,8 +101,8 @@ export function StepIndicator() {
                         isCurrent
                           ? "text-foreground"
                           : isComplete
-                          ? "text-clinical-green"
-                          : "text-muted-foreground"
+                            ? "text-clinical-green"
+                            : "text-muted-foreground"
                       )}
                     >
                       <span className="hidden sm:inline">{step.title}</span>

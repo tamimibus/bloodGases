@@ -17,6 +17,7 @@ import {
   metabolicAcidosisCauses,
   respiratoryAlkalosisCauses,
   metabolicAlkalosisCauses,
+  normalRanges,
 } from "./schema";
 
 export function determinepHStatus(pH: number): pHStatus {
@@ -411,7 +412,9 @@ export function interpretBloodGas(
   let compensation: CompensationResult | undefined;
 
   if (Na !== undefined && Cl !== undefined) {
-    anionGap = calculateAnionGap(Na, Cl, HCO3, albumin);
+    if (primaryDisorder === "metabolic_acidosis" || phStatus === "normal") {
+      anionGap = calculateAnionGap(Na, Cl, HCO3, albumin);
+    }
   }
 
   if (
@@ -476,6 +479,22 @@ export function interpretBloodGas(
   }
 
   let summary = `${formatDisorderName(primaryDisorder)}`;
+
+  // Check if strict normal (all parameters within normal range)
+  const isStrictNormal =
+    pH >= normalRanges.pH.low && pH <= normalRanges.pH.high &&
+    pCO2 >= normalRanges.pCO2.low && pCO2 <= normalRanges.pCO2.high &&
+    HCO3 >= normalRanges.HCO3.low && HCO3 <= normalRanges.HCO3.high;
+
+  if (isStrictNormal) {
+    summary = "No acid-base disturbance";
+  } else if (primaryDisorder === "normal") {
+    // Normal pH but abnormal components (Mixed or Compensated)
+    // For now, keep it as "Normal" or maybe "Normal pH (Mixed Disorder?)"
+    // The requirement focuses on "If the 3 numbers ... are within normal limit"
+    summary = "Normal pH (Possible mixed disorder/compensated)";
+  }
+
   if (anionGap && primaryDisorder === "metabolic_acidosis") {
     summary += ` with ${anionGap.status === "high" ? "elevated" : anionGap.status === "normal" ? "normal" : "low"} anion gap`;
   }

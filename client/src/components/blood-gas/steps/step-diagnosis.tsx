@@ -1,4 +1,5 @@
-import { RotateCcw, FileText, AlertCircle, CheckCircle2, Stethoscope, Calculator } from "lucide-react";
+import { useState } from "react";
+import { RotateCcw, FileText, AlertCircle, CheckCircle2, Stethoscope, Calculator, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 export function StepDiagnosis() {
   const { interpretation, input, reset } = useWizard();
+  const [isAsthmaConcern, setIsAsthmaConcern] = useState<boolean | null>(null);
 
   if (!interpretation) {
     return (
@@ -318,6 +320,54 @@ export function StepDiagnosis() {
                 </li>
               ))}
             </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Asthma Exacerbation Check */}
+      {input.pCO2 !== undefined && input.pCO2 > 35 && (
+        <Card className={`border-l-4 ${isAsthmaConcern === true ? "border-clinical-red bg-clinical-red-light/10" : "border-clinical-orange"}`}>
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <AlertTriangle className={`w-6 h-6 ${isAsthmaConcern === true ? "text-clinical-red" : "text-clinical-orange"}`} />
+              Clinical Correlation Required
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <p className="font-medium text-lg">Is there a concern for asthma exacerbation?</p>
+              <div className="flex gap-4">
+                <Button
+                  variant={isAsthmaConcern === true ? "destructive" : "outline"}
+                  onClick={() => setIsAsthmaConcern(true)}
+                  className="w-32"
+                  data-testid="btn-asthma-yes"
+                >
+                  Yes
+                </Button>
+                <Button
+                  variant={isAsthmaConcern === false ? "secondary" : "outline"}
+                  onClick={() => setIsAsthmaConcern(false)}
+                  className="w-32"
+                  data-testid="btn-asthma-no"
+                >
+                  No
+                </Button>
+              </div>
+            </div>
+
+            {isAsthmaConcern === true && (
+              <div className="p-4 rounded-lg bg-clinical-red text-white animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-6 h-6 shrink-0 text-white" />
+                  <div>
+                    <p className="font-bold text-lg">CRITICAL ALERT</p>
+                    <p className="font-medium text-lg">Patient is in pending respiratory failure.</p>
+                    <p className="text-white/90 text-sm mt-1">Immediate medical intervention required.</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

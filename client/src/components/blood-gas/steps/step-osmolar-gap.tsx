@@ -97,7 +97,7 @@ export function StepOsmolarGap() {
               <Beaker className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">Step 4: Osmolar Gap (Optional)</CardTitle>
+              <CardTitle className="text-xl">Step 3: Osmolar Gap (Optional)</CardTitle>
               <CardDescription>
                 {isHAGMA
                   ? "Recommended for HAGMA to identify toxic alcohols (methanol, ethylene glycol)"

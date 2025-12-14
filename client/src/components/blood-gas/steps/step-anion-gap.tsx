@@ -24,11 +24,13 @@ const anionGapSchema = z.object({
   Na: z.coerce
     .number()
     .min(100, "Na must be at least 100 mmol/L")
-    .max(180, "Na must be at most 180 mmol/L"),
+    .max(180, "Na must be at most 180 mmol/L")
+    .optional(),
   Cl: z.coerce
     .number()
     .min(70, "Cl must be at least 70 mmol/L")
-    .max(130, "Cl must be at most 130 mmol/L"),
+    .max(130, "Cl must be at most 130 mmol/L")
+    .optional(),
   albumin: z.coerce
     .number()
     .min(1, "Albumin must be at least 1 g/dL")
@@ -59,9 +61,20 @@ export function StepAnionGap() {
     goToNextStep();
   };
 
-  // Calculate anion gap if we have required values
+  const getpHStatus = (ph: number) => {
+    if (ph < 7.35) return "acidaemia";
+    if (ph > 7.45) return "alkalaemia";
+    return "normal";
+  };
+
+  const isMetabolicAcidosis = interpretation?.primaryDisorder === "metabolic_acidosis";
+  const isNormalPH = input.pH !== undefined && getpHStatus(input.pH) === "normal";
+  const shouldCalculateAG = isMetabolicAcidosis || isNormalPH;
+
+  // Calculate anion gap if we have required values and conditions are met
   const anionGapResult =
-    watchedNa !== undefined && watchedCl !== undefined && input.HCO3 !== undefined
+    shouldCalculateAG &&
+      watchedNa !== undefined && watchedCl !== undefined && input.HCO3 !== undefined
       ? calculateAnionGap(watchedNa, watchedCl, input.HCO3, watchedAlbumin)
       : null;
 
@@ -101,7 +114,6 @@ export function StepAnionGap() {
   };
 
   const agStatusInfo = getAGStatusInfo(anionGapResult?.status);
-  const isMetabolicAcidosis = interpretation?.primaryDisorder === "metabolic_acidosis";
 
   return (
     <div className="space-y-6">
@@ -112,11 +124,11 @@ export function StepAnionGap() {
               <Calculator className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl">Step 3: Anion Gap Calculation</CardTitle>
+              <CardTitle className="text-xl">Step 2: Anion Gap Calculation</CardTitle>
               <CardDescription>
-                {isMetabolicAcidosis
-                  ? "Calculate the anion gap to classify the metabolic acidosis"
-                  : "Optional: Calculate anion gap for complete analysis"}
+                {shouldCalculateAG
+                  ? "Calculate the anion gap to classify the metabolic acidosis or verify normal gap"
+                  : "Anion Gap calculation is not indicated for this acid-base disorder"}
               </CardDescription>
             </div>
           </div>
@@ -125,15 +137,23 @@ export function StepAnionGap() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Formula Display */}
-              <div className="p-4 rounded-lg bg-muted/50 border">
-                <p className="text-sm text-muted-foreground mb-2">Anion Gap Formula:</p>
-                <p className="text-lg font-mono font-semibold">
-                  AG = [Na⁺] - ([Cl⁻] + [HCO₃⁻])
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Normal = {normalRanges.anionGap.normal} (±4) mEq/L
-                </p>
-              </div>
+              {shouldCalculateAG ? (
+                <div className="p-4 rounded-lg bg-muted/50 border">
+                  <p className="text-sm text-muted-foreground mb-2">Anion Gap Formula:</p>
+                  <p className="text-lg font-mono font-semibold">
+                    AG = [Na⁺] - ([Cl⁻] + [HCO₃⁻])
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Normal = {normalRanges.anionGap.normal} (±4) mEq/L
+                  </p>
+                </div>
+              ) : (
+                <div className="p-4 rounded-lg bg-muted/50 border border-l-4 border-l-clinical-gray">
+                  <p className="text-sm text-muted-foreground">
+                    Anion Gap calculation is typically reserved for cases of Metabolic Acidosis or when checking for a hidden Anion Gap in normal pH.
+                  </p>
+                </div>
+              )}
 
               <div className="grid gap-6 md:grid-cols-3">
                 {/* Na Input */}
@@ -346,7 +366,6 @@ export function StepAnionGap() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={!watchedNa || !watchedCl}
                   data-testid="button-next-step"
                 >
                   Next Step

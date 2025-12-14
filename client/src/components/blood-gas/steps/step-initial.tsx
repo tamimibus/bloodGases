@@ -25,21 +25,24 @@ const initialSchema = z.object({
   pH: z.coerce
     .number()
     .min(0, "pH must be at least 6.8")
-    .max(14, "pH must be at most 7.8"),
+    .max(14, "pH must be at most 7.8")
+    .optional(),
   pCO2: z.coerce
     .number()
     .min(10, "pCO2 must be at least 10 mmHg")
-    .max(100, "pCO2 must be at most 100 mmHg"),
+    .max(100, "pCO2 must be at most 100 mmHg")
+    .optional(),
   HCO3: z.coerce
     .number()
     .min(5, "HCO3 must be at least 5 mmol/L")
-    .max(45, "HCO3 must be at most 45 mmol/L"),
+    .max(45, "HCO3 must be at most 45 mmol/L")
+    .optional(),
 });
 
 type InitialFormData = z.infer<typeof initialSchema>;
 
 export function StepInitial() {
-  const { input, updateInput, goToNextStep } = useWizard();
+  const { input, updateInput, goToNextStep, setCurrentStep } = useWizard();
 
   const form = useForm<InitialFormData>({
     resolver: zodResolver(initialSchema),
@@ -56,7 +59,22 @@ export function StepInitial() {
 
   const onSubmit = (data: InitialFormData) => {
     updateInput({ pH: data.pH, pCO2: data.pCO2, HCO3: data.HCO3 });
-    goToNextStep();
+
+    // Check if we should skip Anion Gap step (Step 2)
+    // Only go to AG step if Metabolic Acidosis or Normal pH
+    if (data.pH !== undefined && data.pCO2 !== undefined && data.HCO3 !== undefined) {
+      const disorder = determinePrimaryDisorder(data.pH, data.pCO2, data.HCO3);
+      const isNormalPH = data.pH >= 7.35 && data.pH <= 7.45;
+
+      if (disorder === "metabolic_acidosis" || isNormalPH) {
+        setCurrentStep(2);
+      } else {
+        // Skip Anion Gap step -> Go to Osmolar Gap (Step 3)
+        setCurrentStep(3);
+      }
+    } else {
+      goToNextStep();
+    }
   };
 
   const getpHInterpretation = (ph: number | undefined) => {
@@ -216,7 +234,7 @@ export function StepInitial() {
               )}
 
               {/* pH Interpretation */}
-              {/* {phInterpretation && (
+              {phInterpretation && phInterpretation.status !== "Normal" && (
                 <div
                   className={`p-4 rounded-lg border-l-4 ${phInterpretation.bgColor} ${phInterpretation.borderColor}`}
                   data-testid="ph-interpretation"
@@ -228,7 +246,7 @@ export function StepInitial() {
                     {phInterpretation.description}
                   </p>
                 </div>
-              )} */}
+              )}
 
               {/* Gases Section */}
               <div className="pt-4 border-t">
@@ -328,7 +346,7 @@ export function StepInitial() {
               </div>
 
               {/* Preliminary Disorder Display */}
-              {/* {preliminaryDisorder && disorderInfo && (
+              {preliminaryDisorder && disorderInfo && (
                 <div
                   className={cn(
                     "p-4 rounded-lg border-l-4",
@@ -344,16 +362,15 @@ export function StepInitial() {
                     {disorderInfo.description}
                   </p>
                 </div>
-              )} */}
+              )}
 
               <div className="flex justify-end pt-4">
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={!isComplete}
                   data-testid="button-next-step"
                 >
-                  Next Step tamimi tt
+                  Next Step
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
