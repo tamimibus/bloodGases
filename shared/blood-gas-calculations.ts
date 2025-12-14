@@ -33,11 +33,43 @@ export function determinePrimaryDisorder(
 ): PrimaryDisorder {
   const phStatus = determinepHStatus(pH);
 
-  if (phStatus === "normal") {
+  // Check if all parameters are within normal ranges
+  const isStrictNormal =
+    pH >= normalRanges.pH.low &&
+    pH <= normalRanges.pH.high &&
+    pCO2 >= normalRanges.pCO2.low &&
+    pCO2 <= normalRanges.pCO2.high &&
+    HCO3 >= normalRanges.HCO3.low &&
+    HCO3 <= normalRanges.HCO3.high;
+
+  if (isStrictNormal) {
     return "normal";
   }
 
-  if (phStatus === "acidaemia") {
+  let effectiveStatus = phStatus;
+
+  // If pH is normal but components are abnormal, determine tendency
+  if (phStatus === "normal") {
+    if (pH < 7.4) {
+      effectiveStatus = "acidaemia";
+    } else if (pH > 7.4) {
+      effectiveStatus = "alkalaemia";
+    } else {
+      // pH === 7.4
+      // Determine based on dominant abnormal respiratory component first
+      if (pCO2 > normalRanges.pCO2.high) {
+        effectiveStatus = "acidaemia";
+      } else if (pCO2 < normalRanges.pCO2.low) {
+        effectiveStatus = "alkalaemia";
+      } else if (HCO3 < normalRanges.HCO3.low) {
+        effectiveStatus = "acidaemia";
+      } else if (HCO3 > normalRanges.HCO3.high) {
+        effectiveStatus = "alkalaemia";
+      }
+    }
+  }
+
+  if (effectiveStatus === "acidaemia") {
     if (pCO2 > 45) {
       return "respiratory_acidosis";
     }
@@ -54,7 +86,7 @@ export function determinePrimaryDisorder(
     return pCO2 > 45 ? "respiratory_acidosis" : "metabolic_acidosis";
   }
 
-  if (phStatus === "alkalaemia") {
+  if (effectiveStatus === "alkalaemia") {
     if (pCO2 < 35) {
       return "respiratory_alkalosis";
     }
@@ -469,6 +501,15 @@ export function interpretBloodGas(
       secondaryDisorders.push("Concurrent metabolic alkalosis");
     } else if (primaryDisorder === "metabolic_alkalosis") {
       secondaryDisorders.push("Concurrent respiratory alkalosis");
+    }
+  }
+
+  // Special handling for pH 7.4: Display both diagnoses with metabolic issue as secondary
+  if (pH === 7.4) {
+    if (primaryDisorder === "respiratory_acidosis" && !secondaryDisorders.includes("Concurrent metabolic alkalosis")) {
+      secondaryDisorders.push("Concurrent metabolic alkalosis");
+    } else if (primaryDisorder === "respiratory_alkalosis" && !secondaryDisorders.includes("Concurrent metabolic acidosis")) {
+      secondaryDisorders.push("Concurrent metabolic acidosis");
     }
   }
 
