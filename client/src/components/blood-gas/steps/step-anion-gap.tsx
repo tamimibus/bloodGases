@@ -69,6 +69,13 @@ export function StepAnionGap() {
     return () => clearTimeout(handler);
   }, [JSON.stringify(values), updateInput]);
 
+  // Ensure values are saved on unmount
+  useEffect(() => {
+    return () => {
+      updateInput(form.getValues());
+    };
+  }, [updateInput, form]);
+
   const watchedNa = form.watch("Na");
   const watchedCl = form.watch("Cl");
   const watchedPotassium = form.watch("potassium");

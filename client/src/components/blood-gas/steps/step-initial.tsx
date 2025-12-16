@@ -62,6 +62,7 @@ export function StepInitial() {
   // Auto-save changes to global state
   // This ensures values are persisted even if the user navigates without clicking Next
   const values = form.watch();
+
   useEffect(() => {
     const handler = setTimeout(() => {
       updateInput(values);
@@ -69,6 +70,17 @@ export function StepInitial() {
 
     return () => clearTimeout(handler);
   }, [JSON.stringify(values), updateInput]);
+
+  // Ensure values are saved on unmount (preventing data loss if navigating while debounce is pending)
+  useEffect(() => {
+    return () => {
+      const currentValues = form.getValues();
+      // Only update if we have values to avoid clearing state on accidental unmounts if any
+      if (currentValues) {
+        updateInput(currentValues);
+      }
+    };
+  }, [updateInput, form]);
 
   const watchedPH = form.watch("pH");
   const watchedPCO2 = form.watch("pCO2");

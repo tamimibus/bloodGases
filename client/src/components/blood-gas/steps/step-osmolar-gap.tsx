@@ -113,6 +113,23 @@ export function StepOsmolarGap() {
     return () => clearTimeout(handler);
   }, [JSON.stringify(values), updateInput, glucoseUnit, ureaUnit, ethanolUnit, GLUCOSE_CF, UREA_CF, ETHANOL_CF]);
 
+  // Ensure values are saved on unmount
+  useEffect(() => {
+    return () => {
+      const vals = form.getValues();
+      updateInput({
+        Na: vals.Na,
+        measuredOsmolality: vals.measuredOsmolality,
+        glucose: toMmol(vals.glucose, glucoseUnit, GLUCOSE_CF),
+        urea: toMmol(vals.urea, ureaUnit, UREA_CF),
+        ethanol: toMmol(vals.ethanol, ethanolUnit, ETHANOL_CF),
+        hasKetones: vals.hasKetones,
+        hasVisionChanges: vals.hasVisionChanges,
+        hasCalciumOxalate: vals.hasCalciumOxalate,
+      });
+    };
+  }, [updateInput, form, glucoseUnit, ureaUnit, ethanolUnit, GLUCOSE_CF, UREA_CF, ETHANOL_CF]);
+
   // onSubmit: Convert everything to mmol/L for storage
   const onSubmit = (data: OsmolarGapFormData) => {
     updateInput({
