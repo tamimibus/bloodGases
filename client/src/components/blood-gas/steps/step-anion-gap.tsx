@@ -383,7 +383,7 @@ export function StepAnionGap() {
                   </div>
 
                   {/* Result Display */}
-                  <div className="flex items-center justify-center gap-6 p-6 rounded-lg bg-muted/30">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 rounded-lg bg-muted/30">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Raw Anion Gap</p>
                       <p className="text-3xl font-bold font-mono">{anionGapResult.value.toFixed(1)}</p>
@@ -431,7 +431,7 @@ export function StepAnionGap() {
                 </div>
               )}
 
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-between pt-4">
                 <Button
                   type="button"
                   variant="outline"

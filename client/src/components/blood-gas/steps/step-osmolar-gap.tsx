@@ -724,7 +724,7 @@ export function StepOsmolarGap() {
                   </div>
 
                   {/* Result Display */}
-                  <div className="flex items-center justify-center gap-8 p-6 rounded-lg bg-muted/30">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-8 p-6 rounded-lg bg-muted/30">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Calculated</p>
                       <p className="text-2xl font-bold font-mono">
@@ -797,7 +797,7 @@ export function StepOsmolarGap() {
               {/* Advanced Diagnostic Tree */}
               {renderDiagnosticTree()}
 
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col-reverse gap-4 sm:flex-row sm:justify-between pt-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -808,7 +808,7 @@ export function StepOsmolarGap() {
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Previous
                 </Button>
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                   {canSkip && (
                     <Button
                       type="button"

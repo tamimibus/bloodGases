@@ -212,6 +212,21 @@ export function StepInitial() {
 
                       />
                     </FormControl>
+
+                    {watchedPH !== undefined && (
+                      <div className="pt-2">
+                        <ValueRangeIndicator
+                          value={watchedPH}
+                          min={0}
+                          max={14}
+                          normalLow={normalRanges.pH.low}
+                          normalHigh={normalRanges.pH.high}
+                          unit=""
+                          label="pH"
+                        />
+                      </div>
+                    )}
+
                     <FormDescription>
                       Normal range: {normalRanges.pH.low} - {normalRanges.pH.high}
                     </FormDescription>
@@ -219,21 +234,6 @@ export function StepInitial() {
                   </FormItem>
                 )}
               />
-
-              {/* Visual Range Indicator for pH */}
-              {watchedPH !== undefined && (
-                <div className="pt-2">
-                  <ValueRangeIndicator
-                    value={watchedPH}
-                    min={0}
-                    max={14}
-                    normalLow={normalRanges.pH.low}
-                    normalHigh={normalRanges.pH.high}
-                    unit=""
-                    label="pH"
-                  />
-                </div>
-              )}
 
               {/* pH Interpretation */}
 
@@ -266,6 +266,21 @@ export function StepInitial() {
                               value={field.value ?? ""}
                             />
                           </FormControl>
+
+                          {watchedPCO2 !== undefined && (
+                            <div className="pt-2">
+                              <ValueRangeIndicator
+                                value={watchedPCO2}
+                                min={10}
+                                max={100}
+                                normalLow={normalRanges.pCO2.low}
+                                normalHigh={normalRanges.pCO2.high}
+                                unit=" mmHg"
+                                label="pCO₂"
+                              />
+                            </div>
+                          )}
+
                           <FormDescription>
                             Normal: {normalRanges.pCO2.low} - {normalRanges.pCO2.high} {normalRanges.pCO2.unit}
                           </FormDescription>
@@ -273,18 +288,6 @@ export function StepInitial() {
                         </FormItem>
                       )}
                     />
-
-                    {watchedPCO2 !== undefined && (
-                      <ValueRangeIndicator
-                        value={watchedPCO2}
-                        min={10}
-                        max={100}
-                        normalLow={normalRanges.pCO2.low}
-                        normalHigh={normalRanges.pCO2.high}
-                        unit=" mmHg"
-                        label="pCO₂"
-                      />
-                    )}
                   </div>
 
                   {/* HCO3 Input */}
@@ -312,6 +315,20 @@ export function StepInitial() {
                             />
                           </FormControl>
 
+                          {watchedHCO3 !== undefined && (
+                            <div className="pt-2">
+                              <ValueRangeIndicator
+                                value={watchedHCO3}
+                                min={5}
+                                max={45}
+                                normalLow={normalRanges.HCO3.low}
+                                normalHigh={normalRanges.HCO3.high}
+                                unit=" mmol/L"
+                                label="HCO₃⁻"
+                              />
+                            </div>
+                          )}
+
                           <FormMessage />
                           <FormDescription>
                             HC03 “the measured Bicarbonate, please obtain the result from the chemistry”
@@ -320,18 +337,6 @@ export function StepInitial() {
                         </FormItem>
                       )}
                     />
-
-                    {watchedHCO3 !== undefined && (
-                      <ValueRangeIndicator
-                        value={watchedHCO3}
-                        min={5}
-                        max={45}
-                        normalLow={normalRanges.HCO3.low}
-                        normalHigh={normalRanges.HCO3.high}
-                        unit=" mmol/L"
-                        label="HCO₃⁻"
-                      />
-                    )}
 
                   </div>
                 </div>
