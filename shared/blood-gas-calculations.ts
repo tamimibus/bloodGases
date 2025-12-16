@@ -153,8 +153,8 @@ export function calculateOsmolarGap(
   let formula = `Calculated Osm = 2×[Na⁺] + Glucose + Urea = 2×${Na} + ${glucose} + ${urea}`;
 
   if (ethanol && ethanol > 0) {
-    calculatedOsm += ethanol / 4.6;
-    formula += ` + (${ethanol}/4.6)`;
+    calculatedOsm += ethanol;
+    formula += ` + ${ethanol}`;
   }
 
   formula += ` = ${calculatedOsm.toFixed(1)} mOsm/kg`;
@@ -559,4 +559,59 @@ export function interpretBloodGas(
     secondaryDisorders,
     summary,
   };
+}
+
+/**
+ * Validates consistency of pH using Henderson-Hasselbalch equation
+ */
+export function validateHendersonHasselbalch(
+  pH: number,
+  pCO2: number,
+  HCO3: number
+): { isValid: boolean; calculatedPH: number; difference: number } {
+  // Henderson-Hasselbalch equation: pH = 6.1 + log10(HCO3 / (0.03 * pCO2))
+  const calculatedPH = 6.1 + Math.log10(HCO3 / (0.03 * pCO2));
+  const difference = Math.abs(pH - calculatedPH);
+
+  // Consider valid if difference is within 0.03
+  return {
+    isValid: difference <= 0.03,
+    calculatedPH: parseFloat(calculatedPH.toFixed(3)),
+    difference: parseFloat(difference.toFixed(3)),
+  };
+}
+
+/**
+ * Calculates corrected sodium for hyperglycemia
+ * @param Na Measured Sodium (mmol/L)
+ * @param glucose Measured Glucose (mmol/L)
+ * @returns Corrected Sodium or null if inputs invalid
+ * Formula: Corrected Na = Measured Na + 1.6 * ((Glucose (mg/dL) - 100) / 100)
+ * OR Simplified from request: Na + 0.02 * (Glucose_mg_dl - 100)
+ * Note: Input glucose is in mmol/L, so convert to mg/dL first (x 18.018)
+ */
+export function calculateCorrectedSodium(Na: number, glucose: number): number {
+  const glucose_mg_dl = glucose * 18.01802;
+  // Formula: Na + 0.02 * (Glucose_mg - 100)
+  const correctedNa = Na + 0.02 * (glucose_mg_dl - 100);
+  return parseFloat(correctedNa.toFixed(1));
+}
+
+/**
+ * Calculates corrected potassium for pH changes
+ * @param K Measured Potassium (mmol/L)
+ * @param pH Measured pH
+ * @returns Corrected Potassium
+ * Formula: K - 0.6 * ((7.4 - pH) / 0.1)
+ */
+export function calculateCorrectedPotassium(K: number, pH: number): number {
+  const phDifference = 7.4 - pH;
+  // Each 0.1 unit pH change -> 0.6 unit K change inverse
+  // If pH < 7.4 (acidosis), K shifts out (measured is high), so Corrected should be lower?
+  // User Formula: K - 0.6 * ([ 7.4-PH ]/0.1)
+  // Example: pH 7.2. Diff = 0.2. Steps = 2. Adjustment = 1.2.
+  // Result = K - 1.2. (Matches expected logic: acidosis causes hyperkalemia, so true K is lower)
+  const adjustment = 0.6 * (phDifference / 0.1);
+  const correctedK = K - adjustment;
+  return parseFloat(correctedK.toFixed(1));
 }

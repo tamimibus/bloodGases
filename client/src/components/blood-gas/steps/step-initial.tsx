@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowRight, Beaker, Wind, FlaskConical } from "lucide-react";
+import { ArrowRight, Beaker, Wind, FlaskConical, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,10 +15,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ValueRangeIndicator } from "../value-range-indicator";
 import { useWizard } from "../wizard-context";
 import { normalRanges } from "@shared/schema";
-import { determinePrimaryDisorder, formatDisorderName } from "@/lib/blood-gas-logic";
+import { determinePrimaryDisorder, formatDisorderName, validateHendersonHasselbalch, calculateWintersFormula, calculateMetabolicAlkalosisCompensation, calculateRespiratoryCompensation } from "@/lib/blood-gas-logic";
 import { cn } from "@/lib/utils";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 
@@ -42,6 +44,10 @@ const initialSchema = z.object({
 type InitialFormData = z.infer<typeof initialSchema>;
 
 export function StepInitial() {
+
+  // ... existing imports
+
+  // ... inside StepInitial component
   const { input, updateInput, goToNextStep, setCurrentStep } = useWizard();
 
   const form = useForm<InitialFormData>({
@@ -52,6 +58,17 @@ export function StepInitial() {
       HCO3: input.HCO3 ?? (undefined as unknown as number),
     },
   });
+
+  // Auto-save changes to global state
+  // This ensures values are persisted even if the user navigates without clicking Next
+  const values = form.watch();
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      updateInput(values);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [JSON.stringify(values), updateInput]);
 
   const watchedPH = form.watch("pH");
   const watchedPCO2 = form.watch("pCO2");
@@ -77,34 +94,7 @@ export function StepInitial() {
     }
   };
 
-  const getpHInterpretation = (ph: number | undefined) => {
-    if (ph === undefined) return null;
-    if (ph < 7.35) {
-      return {
-        status: "Acidaemia",
-        description: "pH is below normal range",
-        color: "text-clinical-red",
-        bgColor: "bg-clinical-red-light",
-        borderColor: "border-clinical-red",
-      };
-    }
-    if (ph > 7.45) {
-      return {
-        status: "Alkalaemia",
-        description: "pH is above normal range",
-        color: "text-clinical-orange",
-        bgColor: "bg-clinical-orange-light",
-        borderColor: "border-clinical-orange",
-      };
-    }
-    return {
-      status: "Normal",
-      description: "pH is within normal range",
-      color: "text-clinical-green",
-      bgColor: "bg-clinical-green-light",
-      borderColor: "border-clinical-green",
-    };
-  };
+
 
   const preliminaryDisorder =
     watchedPH !== undefined && watchedPCO2 !== undefined && watchedHCO3 !== undefined
@@ -150,7 +140,7 @@ export function StepInitial() {
     return disorders[disorder];
   };
 
-  const phInterpretation = getpHInterpretation(watchedPH);
+
   const disorderInfo = getDisorderInfo(preliminaryDisorder);
   const isComplete = watchedPH !== undefined && watchedPCO2 !== undefined && watchedHCO3 !== undefined;
 
@@ -234,19 +224,7 @@ export function StepInitial() {
               )}
 
               {/* pH Interpretation */}
-              {phInterpretation && phInterpretation.status !== "Normal" && (
-                <div
-                  className={`p-4 rounded-lg border-l-4 ${phInterpretation.bgColor} ${phInterpretation.borderColor}`}
-                  data-testid="ph-interpretation"
-                >
-                  <p className={`font-bold text-lg ${phInterpretation.color}`}>
-                    {phInterpretation.status}
-                  </p>
-                  <p className="text-sm text-foreground/80 mt-1">
-                    {phInterpretation.description}
-                  </p>
-                </div>
-              )}
+
 
               {/* Gases Section */}
               <div className="pt-4 border-t">
@@ -321,11 +299,12 @@ export function StepInitial() {
                               value={field.value ?? ""}
                             />
                           </FormControl>
+
+                          <FormMessage />
                           <FormDescription>
                             HC03 “the measured Bicarbonate, please obtain the result from the chemistry”
                             Normal: {normalRanges.HCO3.low} - {normalRanges.HCO3.high} {normalRanges.HCO3.unit}
                           </FormDescription>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -341,9 +320,29 @@ export function StepInitial() {
                         label="HCO₃⁻"
                       />
                     )}
+
                   </div>
                 </div>
               </div>
+
+              {/* Henderson-Hasselbalch Validation Warning */}
+              {isComplete && (
+                (() => {
+                  const validation = validateHendersonHasselbalch(watchedPH, watchedPCO2, watchedHCO3);
+                  if (!validation.isValid) {
+                    return (
+                      <Alert variant="destructive" className="mt-4 border-l-4 border-l-destructive">
+                        <AlertTriangle className="h-5 w-5" />
+                        <AlertTitle className="font-bold ml-2">Check for lab error</AlertTitle>
+                        <AlertDescription className="ml-2">
+                          The calculated pH ({validation.calculatedPH.toFixed(2)}) differs from the entered pH ({watchedPH}) by more than 0.03. Please verify the values.
+                        </AlertDescription>
+                      </Alert>
+                    );
+                  }
+                  return null;
+                })()
+              )}
 
               {/* Preliminary Disorder Display */}
               {preliminaryDisorder && disorderInfo && (
@@ -361,6 +360,63 @@ export function StepInitial() {
                   <p className="text-sm text-foreground/80 mt-1">
                     {disorderInfo.description}
                   </p>
+
+                  {/* Compensation / Secondary Process */}
+                  {(() => {
+                    if (!preliminaryDisorder || preliminaryDisorder === "normal" || !isComplete) return null;
+
+                    let compensationResult = null;
+                    let title = "Expected Compensation";
+
+                    if (preliminaryDisorder === "metabolic_acidosis") {
+                      compensationResult = calculateWintersFormula(watchedHCO3, watchedPCO2);
+                      title = "Winter's Formula (Expected pCO₂)";
+                    } else if (preliminaryDisorder === "metabolic_alkalosis") {
+                      compensationResult = calculateMetabolicAlkalosisCompensation(watchedHCO3, watchedPCO2);
+                      title = "Expected pCO₂";
+                    } else if (preliminaryDisorder === "respiratory_acidosis" || preliminaryDisorder === "respiratory_alkalosis") {
+                      compensationResult = calculateRespiratoryCompensation(preliminaryDisorder, watchedPCO2, watchedHCO3);
+                      title = "Expected HCO₃⁻";
+                    }
+
+                    if (!compensationResult) return null;
+
+                    // Determine status color
+                    const statusColor =
+                      compensationResult.status === "appropriate" ? "text-clinical-green" :
+                        compensationResult.status === "excessive" ? "text-clinical-orange" :
+                          "text-clinical-red"; // Inadequate
+
+                    return (
+                      <div className="mt-4 pt-3 border-t border-black/10">
+                        <p className="font-semibold text-sm mb-1">{title}</p>
+
+                        {/* Formula/Expected Range */}
+                        {"expectedPCO2Low" in compensationResult ? (
+                          <p className="font-mono text-sm">
+                            Expected: {compensationResult.expectedPCO2Low.toFixed(1)} - {compensationResult.expectedPCO2High.toFixed(1)} mmHg
+                          </p>
+                        ) : (
+                          <p className="font-mono text-sm">
+                            {compensationResult.rule}
+                          </p>
+                        )}
+
+                        {/* Actual Value Comparison */}
+                        <div className="mt-2 flex items-center justify-between text-sm">
+                          <span>Status:</span>
+                          <span className={cn("font-bold", statusColor)}>
+                            {compensationResult.status === "appropriate" ? "Compensated" :
+                              compensationResult.status === "excessive" ? "Partially Compensated / Mixed" :
+                                "Uncompensated / Mixed"}
+                            <span className="font-normal text-muted-foreground ml-1">
+                              ({compensationResult.status})
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,6 +32,11 @@ const anionGapSchema = z.object({
     .min(70, "Cl must be at least 70 mmol/L")
     .max(130, "Cl must be at most 130 mmol/L")
     .optional(),
+  potassium: z.coerce
+    .number()
+    .min(0, "K must be at least 0 mmol/L")
+    .max(10, "K must be at most 10 mmol/L")
+    .optional(),
   albumin: z.coerce
     .number()
     .min(1, "Albumin must be at least 1 g/dL")
@@ -48,16 +54,28 @@ export function StepAnionGap() {
     defaultValues: {
       Na: input.Na ?? (undefined as unknown as number),
       Cl: input.Cl ?? (undefined as unknown as number),
+      potassium: input.potassium ?? (undefined as unknown as number),
       albumin: input.albumin ?? (undefined as unknown as number),
     },
   });
 
+  // Auto-save changes to global state
+  const values = form.watch();
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      updateInput(values);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [JSON.stringify(values), updateInput]);
+
   const watchedNa = form.watch("Na");
   const watchedCl = form.watch("Cl");
+  const watchedPotassium = form.watch("potassium");
   const watchedAlbumin = form.watch("albumin");
 
   const onSubmit = (data: AnionGapFormData) => {
-    updateInput({ Na: data.Na, Cl: data.Cl, albumin: data.albumin });
+    updateInput({ Na: data.Na, Cl: data.Cl, potassium: data.potassium, albumin: data.albumin });
     goToNextStep();
   };
 
@@ -77,6 +95,13 @@ export function StepAnionGap() {
       watchedNa !== undefined && watchedCl !== undefined && input.HCO3 !== undefined
       ? calculateAnionGap(watchedNa, watchedCl, input.HCO3, watchedAlbumin)
       : null;
+
+  const getWarning = (val: number | undefined, min: number, max: number) => {
+    if (val !== undefined && (val < min || val > max)) {
+      return "value is too high / too low , please double check your input";
+    }
+    return undefined;
+  };
 
   const getAGStatusInfo = (status: string | undefined) => {
     if (!status) return null;
@@ -176,6 +201,7 @@ export function StepAnionGap() {
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                           value={field.value ?? ""}
+                          tooltip={getWarning(field.value, 100, 155)}
                         />
                       </FormControl>
                       <FormDescription>
@@ -220,6 +246,7 @@ export function StepAnionGap() {
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                           value={field.value ?? ""}
+                          tooltip={getWarning(field.value, 90, 120)}
                         />
                       </FormControl>
                       <FormDescription>
@@ -244,6 +271,50 @@ export function StepAnionGap() {
                   </div>
                 )}
 
+                {/* Potassium Input */}
+                <FormField
+                  control={form.control}
+                  name="potassium"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold flex items-center gap-2">
+                        <Atom className="w-4 h-4" />
+                        K⁺ (mmol/L) <span className="text-muted-foreground font-normal">(optional)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="4.0"
+                          className="text-lg h-11 font-mono"
+                          data-testid="input-k"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Normal: {normalRanges.K.low}-{normalRanges.K.high}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {watchedPotassium !== undefined && (
+                  <div className="pt-2">
+                    <ValueRangeIndicator
+                      value={watchedPotassium}
+                      min={1}
+                      max={10}
+                      normalLow={normalRanges.K.low}
+                      normalHigh={normalRanges.K.high}
+                      unit=" mmol/L"
+                      label="K⁺"
+                    />
+                  </div>
+                )}
+
                 {/* Albumin Input (Optional) */}
                 <FormField
                   control={form.control}
@@ -263,6 +334,7 @@ export function StepAnionGap() {
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                           value={field.value ?? ""}
+                          tooltip={getWarning(field.value, 2, 6)}
                         />
                       </FormControl>
                       <FormDescription>
@@ -376,6 +448,6 @@ export function StepAnionGap() {
           </Form>
         </CardContent>
       </Card>
-    </div>
+    </div >
   );
 }

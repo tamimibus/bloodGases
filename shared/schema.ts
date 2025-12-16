@@ -10,8 +10,14 @@ export const bloodGasInputSchema = z.object({
   albumin: z.number().min(1).max(6).optional(),
   measuredOsmolality: z.number().min(200).max(400).optional(),
   glucose: z.number().min(0).max(50).optional(),
+  potassium: z.number().min(0).max(10).optional(),
   urea: z.number().min(0).max(100).optional(),
   ethanol: z.number().min(0).max(100).optional(),
+
+  // Diagnostic screening questions
+  hasKetones: z.boolean().optional(),
+  hasVisionChanges: z.boolean().optional(),
+  hasCalciumOxalate: z.boolean().optional(),
 });
 
 export type BloodGasInput = z.infer<typeof bloodGasInputSchema>;
@@ -20,10 +26,10 @@ export type BloodGasInput = z.infer<typeof bloodGasInputSchema>;
 export type pHStatus = "acidaemia" | "normal" | "alkalaemia";
 
 // Primary disorder type
-export type PrimaryDisorder = 
-  | "respiratory_acidosis" 
-  | "metabolic_acidosis" 
-  | "respiratory_alkalosis" 
+export type PrimaryDisorder =
+  | "respiratory_acidosis"
+  | "metabolic_acidosis"
+  | "respiratory_alkalosis"
   | "metabolic_alkalosis"
   | "normal";
 
@@ -189,7 +195,8 @@ export const normalRanges = {
   pCO2: { low: 35, high: 45, unit: "mmHg" },
   HCO3: { low: 22, high: 26, unit: "mmol/L" },
   Na: { low: 135, high: 145, unit: "mmol/L" },
-  Cl: { low: 98, high: 106, unit: "mmol/L" },
+  K: { low: 3.5, high: 5.0, unit: "mmol/L" },
+  Cl: { low: 98, high: 107, unit: "mmol/L" },
   anionGap: { low: 8, high: 16, normal: 12, unit: "mEq/L" },
   osmolarGap: { low: -10, high: 10, unit: "mOsm/kg" },
   albumin: { low: 3.5, high: 5.0, normal: 4.0, unit: "g/dL" }

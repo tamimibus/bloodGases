@@ -13,6 +13,7 @@ import { useWizard } from "../wizard-context";
 import { formatDisorderName, getMnemonicForDisorder } from "@/lib/blood-gas-logic";
 import { normalRanges } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { calculateCorrectedSodium, calculateCorrectedPotassium } from "@/lib/blood-gas-logic";
 
 export function StepDiagnosis() {
   const { interpretation, input, reset } = useWizard();
@@ -75,6 +76,19 @@ export function StepDiagnosis() {
     interpretation.primaryDisorder,
     interpretation.anionGap?.status
   );
+
+  // Corrected Electrolytes Logic
+  const showCorrectedSodium = input.Na !== undefined && input.glucose !== undefined && input.glucose > 11.1; // > 200 mg/dL approx
+  const correctedSodium = showCorrectedSodium && input.Na && input.glucose
+    ? calculateCorrectedSodium(input.Na, input.glucose)
+    : null;
+
+  const showCorrectedPotassium = input.potassium !== undefined && input.pH !== undefined && (input.pH < 7.35 || input.pH > 7.45);
+  const correctedPotassium = showCorrectedPotassium && input.potassium && input.pH
+    ? calculateCorrectedPotassium(input.potassium, input.pH)
+    : null;
+
+  const showCorrections = (showCorrectedSodium && correctedSodium) || (showCorrectedPotassium && correctedPotassium);
 
   return (
     <div className="space-y-6">
@@ -297,80 +311,126 @@ export function StepDiagnosis() {
         </CardContent>
       </Card>
 
-      {/* Causes Card */}
-      {interpretation.causes.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Stethoscope className="w-5 h-5" />
-              Potential Causes
-              {mnemonic && (
-                <Badge variant="secondary" className="ml-2 font-normal">
-                  Mnemonic: "{mnemonic}"
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="grid gap-2 md:grid-cols-2">
-              {interpretation.causes.map((cause, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm">
-                  <CheckCircle2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
-                  <span>{cause}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Asthma Exacerbation Check */}
-      {input.pCO2 !== undefined && input.pCO2 > 35 && (
-        <Card className={`border-l-4 ${isAsthmaConcern === true ? "border-clinical-red bg-clinical-red-light/10" : "border-clinical-orange"}`}>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <AlertTriangle className={`w-6 h-6 ${isAsthmaConcern === true ? "text-clinical-red" : "text-clinical-orange"}`} />
-              Clinical Correlation Required
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="font-medium text-lg">Is there a concern for asthma exacerbation?</p>
-              <div className="flex gap-4">
-                <Button
-                  variant={isAsthmaConcern === true ? "destructive" : "outline"}
-                  onClick={() => setIsAsthmaConcern(true)}
-                  className="w-32"
-                  data-testid="btn-asthma-yes"
-                >
-                  Yes
-                </Button>
-                <Button
-                  variant={isAsthmaConcern === false ? "secondary" : "outline"}
-                  onClick={() => setIsAsthmaConcern(false)}
-                  className="w-32"
-                  data-testid="btn-asthma-no"
-                >
-                  No
-                </Button>
-              </div>
-            </div>
 
-            {isAsthmaConcern === true && (
-              <div className="p-4 rounded-lg bg-clinical-red text-white animate-in fade-in slide-in-from-top-2">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-6 h-6 shrink-0 text-white" />
+      {/* Corrected Electrolytes Card */}
+      {
+        showCorrections && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calculator className="w-5 h-5" />
+                Corrected Electrolytes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {showCorrectedSodium && correctedSodium && (
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
                   <div>
-                    <p className="font-bold text-lg">CRITICAL ALERT</p>
-                    <p className="font-medium text-lg">Patient is in pending respiratory failure.</p>
-                    <p className="text-white/90 text-sm mt-1">Immediate medical intervention required.</p>
+                    <p className="font-semibold">Corrected Sodium</p>
+                    <p className="text-sm text-muted-foreground">Adjusted for hyperglycemia (Glucose &gt; 200 mg/dL)</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold font-mono">{correctedSodium.toFixed(1)}</p>
+                    <p className="text-xs text-muted-foreground">mmol/L</p>
                   </div>
                 </div>
+              )}
+              {showCorrectedPotassium && correctedPotassium && (
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
+                  <div>
+                    <p className="font-semibold">Corrected Potassium</p>
+                    <p className="text-sm text-muted-foreground">Adjusted for pH abnormality</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold font-mono">{correctedPotassium.toFixed(1)}</p>
+                    <p className="text-xs text-muted-foreground">mmol/L</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      }
+
+      {/* Causes Card */}
+      {
+        interpretation.causes.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Stethoscope className="w-5 h-5" />
+                Potential Causes
+                {mnemonic && (
+                  <Badge variant="secondary" className="ml-2 font-normal">
+                    Mnemonic: "{mnemonic}"
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="grid gap-2 md:grid-cols-2">
+                {interpretation.causes.map((cause, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                    <span>{cause}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )
+      }
+
+      {/* Asthma Exacerbation Check */}
+      {
+        input.pCO2 !== undefined && input.pCO2 > 35 && (
+          <Card className={`border-l-4 ${isAsthmaConcern === true ? "border-clinical-red bg-clinical-red-light/10" : "border-clinical-orange"}`}>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <AlertTriangle className={`w-6 h-6 ${isAsthmaConcern === true ? "text-clinical-red" : "text-clinical-orange"}`} />
+                Clinical Correlation Required
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <p className="font-medium text-lg">Is there a concern for asthma exacerbation?</p>
+                <div className="flex gap-4">
+                  <Button
+                    variant={isAsthmaConcern === true ? "destructive" : "outline"}
+                    onClick={() => setIsAsthmaConcern(true)}
+                    className="w-32"
+                    data-testid="btn-asthma-yes"
+                  >
+                    Yes
+                  </Button>
+                  <Button
+                    variant={isAsthmaConcern === false ? "secondary" : "outline"}
+                    onClick={() => setIsAsthmaConcern(false)}
+                    className="w-32"
+                    data-testid="btn-asthma-no"
+                  >
+                    No
+                  </Button>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+
+              {isAsthmaConcern === true && (
+                <div className="p-4 rounded-lg bg-clinical-red text-white animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-6 h-6 shrink-0 text-white" />
+                    <div>
+                      <p className="font-bold text-lg">CRITICAL ALERT</p>
+                      <p className="font-medium text-lg">Patient is in pending respiratory failure.</p>
+                      <p className="text-white/90 text-sm mt-1">Immediate medical intervention required.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      }
 
       {/* Actions */}
       <div className="flex justify-center pt-4">
@@ -384,6 +444,6 @@ export function StepDiagnosis() {
           New Analysis
         </Button>
       </div>
-    </div>
+    </div >
   );
 }

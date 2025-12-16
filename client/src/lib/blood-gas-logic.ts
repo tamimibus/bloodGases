@@ -11,5 +11,8 @@ export {
   getMnemonicForDisorder,
   formatDisorderName,
   getDisorderColorClass,
+  validateHendersonHasselbalch,
+  calculateCorrectedSodium,
+  calculateCorrectedPotassium,
   interpretBloodGas,
 } from "@shared/blood-gas-calculations";
