@@ -44,12 +44,23 @@ export function StepGases() {
     },
   });
 
-  const watchedPCO2 = form.watch("pCO2");
-  const watchedHCO3 = form.watch("HCO3");
+  const parseValue = (val: any): number | undefined => {
+    if (val === "" || val === undefined || val === null) return undefined;
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+  };
+
+  const watchedPCO2 = parseValue(form.watch("pCO2"));
+  const watchedHCO3 = parseValue(form.watch("HCO3"));
 
   const onSubmit = (data: GasesFormData) => {
-    updateInput({ pCO2: data.pCO2, HCO3: data.HCO3 });
-    goToNextStep();
+    const pCO2Val = parseValue(data.pCO2);
+    const HCO3Val = parseValue(data.HCO3);
+
+    if (pCO2Val !== undefined && HCO3Val !== undefined) {
+      updateInput({ pCO2: pCO2Val, HCO3: HCO3Val });
+      goToNextStep();
+    }
   };
 
   // Calculate preliminary disorder if we have all values
@@ -138,7 +149,7 @@ export function StepGases() {
                             className="text-xl h-12 font-mono"
                             data-testid="input-pco2"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            onChange={field.onChange}
                             value={field.value ?? ""}
                           />
                         </FormControl>
@@ -180,7 +191,7 @@ export function StepGases() {
                             className="text-xl h-12 font-mono"
                             data-testid="input-hco3"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            onChange={field.onChange}
                             value={field.value ?? ""}
                           />
                         </FormControl>

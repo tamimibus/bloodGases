@@ -82,9 +82,19 @@ export function StepInitial() {
     };
   }, [updateInput, form]);
 
-  const watchedPH = form.watch("pH");
-  const watchedPCO2 = form.watch("pCO2");
-  const watchedHCO3 = form.watch("HCO3");
+  const rawPH = form.watch("pH");
+  const rawPCO2 = form.watch("pCO2");
+  const rawHCO3 = form.watch("HCO3");
+
+  const parseValue = (val: any): number | undefined => {
+    if (val === "" || val === undefined || val === null) return undefined;
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+  };
+
+  const watchedPH = parseValue(rawPH);
+  const watchedPCO2 = parseValue(rawPCO2);
+  const watchedHCO3 = parseValue(rawHCO3);
 
   const onSubmit = (data: InitialFormData) => {
     updateInput({ pH: data.pH, pCO2: data.pCO2, HCO3: data.HCO3 });
@@ -191,18 +201,12 @@ export function StepInitial() {
                         className="text-2xl h-14 font-mono"
                         data-testid="input-ph"
                         {...field}
-                        onChange={(e) => {
-
-                          field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)
-
-                        }}
+                        onChange={field.onChange}
                         value={field.value ?? ""}
                         tooltip=" Good —  is within the 6.8 - 7.8 "
                         onMouseEnter={(e) => {
-                          console.log("tamimi", field, e)
-                          const val = field.value;
+                          const val = parseValue(field.value);
                           if (val !== undefined && (val < 6.8 || val > 7.8)) {
-                            console.log("tamimi222", field, e)
                             e.currentTarget.title = `Value must be between ${6.8} and ${7.8}`;
                           } else {
                             e.currentTarget.title = "";
@@ -262,7 +266,7 @@ export function StepInitial() {
                               data-testid="input-pco2"
                               {...field}
                               tooltip=" Good —  is within the 10 - 100"
-                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                              onChange={field.onChange}
                               value={field.value ?? ""}
                             />
                           </FormControl>
@@ -310,7 +314,7 @@ export function StepInitial() {
                               data-testid="input-hco3"
                               {...field}
                               tooltip=" Good —  is within the 10- 42"
-                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                              onChange={field.onChange}
                               value={field.value ?? ""}
                             />
                           </FormControl>

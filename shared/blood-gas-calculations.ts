@@ -26,102 +26,27 @@ export function determinepHStatus(pH: number): pHStatus {
   return "normal";
 }
 
-export function determinePrimaryDisorder(
-  pH: number,
-  pCO2: number,
-  HCO3: number
-): PrimaryDisorder {
-  const phStatus = determinepHStatus(pH);
-
-  // Check if all parameters are within normal ranges
-  const isStrictNormal =
-    pH >= normalRanges.pH.low &&
-    pH <= normalRanges.pH.high &&
-    pCO2 >= normalRanges.pCO2.low &&
-    pCO2 <= normalRanges.pCO2.high &&
-    HCO3 >= normalRanges.HCO3.low &&
-    HCO3 <= normalRanges.HCO3.high;
-
-  if (isStrictNormal) {
-    return "normal";
-  }
-
-  let effectiveStatus = phStatus;
-
-  // If pH is normal but components are abnormal, determine tendency
-  if (phStatus === "normal") {
-    if (pH < 7.4) {
-      effectiveStatus = "acidaemia";
-    } else if (pH > 7.4) {
-      effectiveStatus = "alkalaemia";
-    } else {
-      // pH === 7.4
-      // Determine based on dominant abnormal respiratory component first
-      if (pCO2 > normalRanges.pCO2.high) {
-        effectiveStatus = "acidaemia";
-      } else if (pCO2 < normalRanges.pCO2.low) {
-        effectiveStatus = "alkalaemia";
-      } else if (HCO3 < normalRanges.HCO3.low) {
-        effectiveStatus = "acidaemia";
-      } else if (HCO3 > normalRanges.HCO3.high) {
-        effectiveStatus = "alkalaemia";
-      }
-    }
-  }
-
-  if (effectiveStatus === "acidaemia") {
-    if (pCO2 > 45) {
-      return "respiratory_acidosis";
-    }
-    if (HCO3 < 22) {
-      return "metabolic_acidosis";
-    }
-    if (pCO2 > 45 && HCO3 < 22) {
-      const pCO2Deviation = (pCO2 - 40) / 40;
-      const HCO3Deviation = (24 - HCO3) / 24;
-      return pCO2Deviation > HCO3Deviation
-        ? "respiratory_acidosis"
-        : "metabolic_acidosis";
-    }
-    return pCO2 > 45 ? "respiratory_acidosis" : "metabolic_acidosis";
-  }
-
-  if (effectiveStatus === "alkalaemia") {
-    if (pCO2 < 35) {
-      return "respiratory_alkalosis";
-    }
-    if (HCO3 > 26) {
-      return "metabolic_alkalosis";
-    }
-    if (pCO2 < 35 && HCO3 > 26) {
-      const pCO2Deviation = (40 - pCO2) / 40;
-      const HCO3Deviation = (HCO3 - 24) / 24;
-      return pCO2Deviation > HCO3Deviation
-        ? "respiratory_alkalosis"
-        : "metabolic_alkalosis";
-    }
-    return pCO2 < 35 ? "respiratory_alkalosis" : "metabolic_alkalosis";
-  }
-
-  return "normal";
-}
-
 export function calculateAnionGap(
   Na: number,
   Cl: number,
   HCO3: number,
   albumin?: number
 ): AnionGapResult {
-  const rawAG = Na - (Cl + HCO3);
-  const formula = `AG = [Na⁺] - ([Cl⁻] + [HCO₃⁻]) = ${Na} - (${Cl} + ${HCO3}) = ${rawAG}`;
+  const normNa = Number(Na);
+  const normCl = Number(Cl);
+  const normHCO3 = Number(HCO3);
+  const normAlbumin = albumin !== undefined ? Number(albumin) : undefined;
+
+  const rawAG = normNa - (normCl + normHCO3);
+  const formula = `AG = [Na⁺] - ([Cl⁻] + [HCO₃⁻]) = ${normNa} - (${normCl} + ${normHCO3}) = ${rawAG}`;
 
   let correctedAG = rawAG;
   let correctionFormula: string | undefined;
 
-  if (albumin !== undefined && albumin < 4) {
-    const correction = 2.5 * (4 - albumin);
+  if (normAlbumin !== undefined && normAlbumin < 4) {
+    const correction = 2.5 * (4 - normAlbumin);
     correctedAG = rawAG + correction;
-    correctionFormula = `Corrected AG = ${rawAG} + 2.5 × (4 - ${albumin}) = ${correctedAG.toFixed(1)}`;
+    correctionFormula = `Corrected AG = ${rawAG} + 2.5 × (4 - ${normAlbumin}) = ${correctedAG.toFixed(1)}`;
   }
 
   let status: AnionGapStatus;
@@ -149,21 +74,27 @@ export function calculateOsmolarGap(
   urea: number,
   ethanol?: number
 ): OsmolarGapResult {
-  let calculatedOsm = 2 * Na + glucose + urea;
-  let formula = `Calculated Osm = 2×[Na⁺] + Glucose + Urea = 2×${Na} + ${glucose} + ${urea}`;
+  const normMeasuredOsm = Number(measuredOsmolality);
+  const normNa = Number(Na);
+  const normGlucose = Number(glucose);
+  const normUrea = Number(urea);
+  const normEthanol = ethanol !== undefined ? Number(ethanol) : undefined;
 
-  if (ethanol && ethanol > 0) {
-    calculatedOsm += ethanol;
-    formula += ` + ${ethanol}`;
+  let calculatedOsm = 2 * normNa + normGlucose + normUrea;
+  let formula = `Calculated Osm = 2×[Na⁺] + Glucose + Urea = 2×${normNa} + ${normGlucose} + ${normUrea}`;
+
+  if (normEthanol && normEthanol > 0) {
+    calculatedOsm += normEthanol;
+    formula += ` + ${normEthanol}`;
   }
 
   formula += ` = ${calculatedOsm.toFixed(1)} mOsm/kg`;
 
-  const gap = measuredOsmolality - calculatedOsm;
+  const gap = normMeasuredOsm - calculatedOsm;
 
   return {
     calculatedOsmolality: calculatedOsm,
-    measuredOsmolality,
+    measuredOsmolality: normMeasuredOsm,
     gap,
     isElevated: gap > 10,
     formula,
@@ -174,14 +105,17 @@ export function calculateWintersFormula(
   HCO3: number,
   actualPCO2: number
 ): WintersFormulaResult {
-  const expectedPCO2 = 1.5 * HCO3 + 8;
+  const normHCO3 = Number(HCO3);
+  const normActualPCO2 = Number(actualPCO2);
+
+  const expectedPCO2 = 1.5 * normHCO3 + 8;
   const expectedLow = expectedPCO2 - 2;
   const expectedHigh = expectedPCO2 + 2;
 
   let status: CompensationStatus;
-  if (actualPCO2 >= expectedLow && actualPCO2 <= expectedHigh) {
+  if (normActualPCO2 >= expectedLow && normActualPCO2 <= expectedHigh) {
     status = "appropriate";
-  } else if (actualPCO2 < expectedLow) {
+  } else if (normActualPCO2 < expectedLow) {
     status = "excessive";
   } else {
     status = "inadequate";
@@ -190,9 +124,9 @@ export function calculateWintersFormula(
   return {
     expectedPCO2Low: expectedLow,
     expectedPCO2High: expectedHigh,
-    actualPCO2,
+    actualPCO2: normActualPCO2,
     status,
-    formula: `Expected pCO₂ = (1.5 × ${HCO3}) + 8 ± 2 = ${expectedLow.toFixed(
+    formula: `Expected pCO₂ = (1.5 × ${normHCO3}) + 8 ± 2 = ${expectedLow.toFixed(
       1
     )} - ${expectedHigh.toFixed(1)} mmHg`,
   };
@@ -202,20 +136,23 @@ export function calculateDeltaRatio(
   anionGap: number,
   HCO3: number
 ): DeltaRatioResult {
-  const deltaAG = anionGap - 12;
-  const deltaHCO3 = 24 - HCO3;
+  const normAG = Number(anionGap);
+  const normHCO3 = Number(HCO3);
+
+  const deltaAG = normAG - 12;
+  const deltaHCO3 = 24 - normHCO3;
 
   if (deltaHCO3 === 0) {
     return {
       value: 0,
       status: "hagma",
       interpretation: "Pure HAGMA (no HCO3 change)",
-      formula: `Delta Ratio = (${anionGap} - 12) / (24 - ${HCO3}) = Cannot calculate (no HCO3 change)`,
+      formula: `Delta Ratio = (${normAG} - 12) / (24 - ${normHCO3}) = Cannot calculate (no HCO3 change)`,
     };
   }
 
   const deltaRatio = deltaAG / deltaHCO3;
-  const formula = `Delta Ratio = (AG - 12) / (24 - HCO₃⁻) = (${anionGap} - 12) / (24 - ${HCO3}) = ${deltaRatio.toFixed(
+  const formula = `Delta Ratio = (AG - 12) / (24 - HCO₃⁻) = (${normAG} - 12) / (24 - ${normHCO3}) = ${deltaRatio.toFixed(
     2
   )}`;
 
@@ -250,10 +187,13 @@ export function calculateRespiratoryCompensation(
   pCO2: number,
   HCO3: number
 ): CompensationResult {
+  const normPCO2 = Number(pCO2);
+  const normHCO3 = Number(HCO3);
+
   const normalPCO2 = 40;
   const normalHCO3 = 24;
-  const pCO2Change = Math.abs(pCO2 - normalPCO2);
-  const HCO3Change = HCO3 - normalHCO3;
+  const pCO2Change = Math.abs(normPCO2 - normalPCO2);
+  const HCO3Change = normHCO3 - normalHCO3;
 
   let expectedHCO3Change: number;
   let rule: string;
@@ -325,14 +265,17 @@ export function calculateMetabolicAlkalosisCompensation(
   HCO3: number,
   actualPCO2: number
 ): CompensationResult {
-  const expectedPCO2 = 0.7 * HCO3 + 20;
+  const normHCO3 = Number(HCO3);
+  const normActualPCO2 = Number(actualPCO2);
+
+  const expectedPCO2 = 0.7 * normHCO3 + 20;
   const expectedLow = expectedPCO2 - 5;
   const expectedHigh = expectedPCO2 + 5;
 
   let status: CompensationStatus;
-  if (actualPCO2 >= expectedLow && actualPCO2 <= expectedHigh) {
+  if (normActualPCO2 >= expectedLow && normActualPCO2 <= expectedHigh) {
     status = "appropriate";
-  } else if (actualPCO2 > expectedHigh) {
+  } else if (normActualPCO2 > expectedHigh) {
     status = "excessive";
   } else {
     status = "inadequate";
@@ -340,12 +283,97 @@ export function calculateMetabolicAlkalosisCompensation(
 
   return {
     expectedChange: `Expected pCO₂: ${expectedLow.toFixed(1)} - ${expectedHigh.toFixed(1)} mmHg`,
-    actualChange: `Actual pCO₂: ${actualPCO2} mmHg`,
+    actualChange: `Actual pCO₂: ${normActualPCO2} mmHg`,
     status,
     chronicity: "unknown",
-    rule: `Expected pCO₂ = (0.7 × ${HCO3}) + 20 ± 5 = ${expectedLow.toFixed(1)} - ${expectedHigh.toFixed(1)} mmHg`,
+    rule: `Expected pCO₂ = (0.7 × ${normHCO3}) + 20 ± 5 = ${expectedLow.toFixed(1)} - ${expectedHigh.toFixed(1)} mmHg`,
   };
 }
+
+export function determinePrimaryDisorder(
+  pH: number,
+  pCO2: number,
+  HCO3: number
+): PrimaryDisorder {
+  const normPH = Number(pH);
+  const normPCO2 = Number(pCO2);
+  const normHCO3 = Number(HCO3);
+
+  const phStatus = determinepHStatus(normPH);
+
+  // Check if all parameters are within normal ranges
+  const isStrictNormal =
+    normPH >= normalRanges.pH.low &&
+    normPH <= normalRanges.pH.high &&
+    normPCO2 >= normalRanges.pCO2.low &&
+    normPCO2 <= normalRanges.pCO2.high &&
+    normHCO3 >= normalRanges.HCO3.low &&
+    normHCO3 <= normalRanges.HCO3.high;
+
+  if (isStrictNormal) {
+    return "normal";
+  }
+
+  let effectiveStatus = phStatus;
+
+  // If pH is normal but components are abnormal, determine tendency
+  if (phStatus === "normal") {
+    if (normPH < 7.4) {
+      effectiveStatus = "acidaemia";
+    } else if (normPH > 7.4) {
+      effectiveStatus = "alkalaemia";
+    } else {
+      // pH === 7.4
+      // Determine based on dominant abnormal respiratory component first
+      if (normPCO2 > normalRanges.pCO2.high) {
+        effectiveStatus = "acidaemia";
+      } else if (normPCO2 < normalRanges.pCO2.low) {
+        effectiveStatus = "alkalaemia";
+      } else if (normHCO3 < normalRanges.HCO3.low) {
+        effectiveStatus = "acidaemia";
+      } else if (normHCO3 > normalRanges.HCO3.high) {
+        effectiveStatus = "alkalaemia";
+      }
+    }
+  }
+
+  if (effectiveStatus === "acidaemia") {
+    if (normPCO2 > 45) {
+      return "respiratory_acidosis";
+    }
+    if (normHCO3 < 22) {
+      return "metabolic_acidosis";
+    }
+    if (normPCO2 > 45 && normHCO3 < 22) {
+      const pCO2Deviation = (normPCO2 - 40) / 40;
+      const HCO3Deviation = (24 - normHCO3) / 24;
+      return pCO2Deviation > HCO3Deviation
+        ? "respiratory_acidosis"
+        : "metabolic_acidosis";
+    }
+    return normPCO2 > 45 ? "respiratory_acidosis" : "metabolic_acidosis";
+  }
+
+  if (effectiveStatus === "alkalaemia") {
+    if (normPCO2 < 35) {
+      return "respiratory_alkalosis";
+    }
+    if (normHCO3 > 26) {
+      return "metabolic_alkalosis";
+    }
+    if (normPCO2 < 35 && normHCO3 > 26) {
+      const pCO2Deviation = (40 - normPCO2) / 40;
+      const HCO3Deviation = (normHCO3 - 24) / 24;
+      return pCO2Deviation > HCO3Deviation
+        ? "respiratory_alkalosis"
+        : "metabolic_alkalosis";
+    }
+    return normPCO2 < 35 ? "respiratory_alkalosis" : "metabolic_alkalosis";
+  }
+
+  return "normal";
+}
+
 
 export function getCausesForDisorder(
   disorder: PrimaryDisorder,
@@ -561,17 +589,18 @@ export function interpretBloodGas(
   };
 }
 
-/**
- * Validates consistency of pH using Henderson-Hasselbalch equation
- */
 export function validateHendersonHasselbalch(
   pH: number,
   pCO2: number,
   HCO3: number
 ): { isValid: boolean; calculatedPH: number; difference: number } {
+  const normPH = Number(pH);
+  const normPCO2 = Number(pCO2);
+  const normHCO3 = Number(HCO3);
+
   // Henderson-Hasselbalch equation: pH = 6.1 + log10(HCO3 / (0.03 * pCO2))
-  const calculatedPH = 6.1 + Math.log10(HCO3 / (0.03 * pCO2));
-  const difference = Math.abs(pH - calculatedPH);
+  const calculatedPH = 6.1 + Math.log10(normHCO3 / (0.03 * normPCO2));
+  const difference = Math.abs(normPH - calculatedPH);
 
   // Consider valid if difference is within 0.03
   return {
@@ -581,37 +610,27 @@ export function validateHendersonHasselbalch(
   };
 }
 
-/**
- * Calculates corrected sodium for hyperglycemia
- * @param Na Measured Sodium (mmol/L)
- * @param glucose Measured Glucose (mmol/L)
- * @returns Corrected Sodium or null if inputs invalid
- * Formula: Corrected Na = Measured Na + 1.6 * ((Glucose (mg/dL) - 100) / 100)
- * OR Simplified from request: Na + 0.02 * (Glucose_mg_dl - 100)
- * Note: Input glucose is in mmol/L, so convert to mg/dL first (x 18.018)
- */
 export function calculateCorrectedSodium(Na: number, glucose: number): number {
-  const glucose_mg_dl = glucose * 18.01802;
+  const normNa = Number(Na);
+  const normGlucose = Number(glucose);
+
+  const glucose_mg_dl = normGlucose * 18.01802;
   // Formula: Na + 0.02 * (Glucose_mg - 100)
-  const correctedNa = Na + 0.02 * (glucose_mg_dl - 100);
+  const correctedNa = normNa + 0.02 * (glucose_mg_dl - 100);
   return parseFloat(correctedNa.toFixed(1));
 }
 
-/**
- * Calculates corrected potassium for pH changes
- * @param K Measured Potassium (mmol/L)
- * @param pH Measured pH
- * @returns Corrected Potassium
- * Formula: K - 0.6 * ((7.4 - pH) / 0.1)
- */
 export function calculateCorrectedPotassium(K: number, pH: number): number {
-  const phDifference = 7.4 - pH;
+  const normK = Number(K);
+  const normPH = Number(pH);
+
+  const phDifference = 7.4 - normPH;
   // Each 0.1 unit pH change -> 0.6 unit K change inverse
   // If pH < 7.4 (acidosis), K shifts out (measured is high), so Corrected should be lower?
   // User Formula: K - 0.6 * ([ 7.4-PH ]/0.1)
   // Example: pH 7.2. Diff = 0.2. Steps = 2. Adjustment = 1.2.
   // Result = K - 1.2. (Matches expected logic: acidosis causes hyperkalemia, so true K is lower)
   const adjustment = 0.6 * (phDifference / 0.1);
-  const correctedK = K - adjustment;
+  const correctedK = normK - adjustment;
   return parseFloat(correctedK.toFixed(1));
 }

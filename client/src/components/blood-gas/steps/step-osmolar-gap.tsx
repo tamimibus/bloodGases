@@ -76,11 +76,17 @@ export function StepOsmolarGap() {
     },
   });
 
-  const watchedNa = form.watch("Na");
-  const watchedMeasuredOsm = form.watch("measuredOsmolality");
-  const watchedGlucose = form.watch("glucose");
-  const watchedUrea = form.watch("urea");
-  const watchedEthanol = form.watch("ethanol");
+  const parseValue = (val: any): number | undefined => {
+    if (val === "" || val === undefined || val === null) return undefined;
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+  };
+
+  const watchedNa = parseValue(form.watch("Na"));
+  const watchedMeasuredOsm = parseValue(form.watch("measuredOsmolality"));
+  const watchedGlucose = parseValue(form.watch("glucose"));
+  const watchedUrea = parseValue(form.watch("urea"));
+  const watchedEthanol = parseValue(form.watch("ethanol"));
 
   // Unit state - Defaults to mg/dL
   const [glucoseUnit, setGlucoseUnit] = useState<"mmol/L" | "mg/dL">("mg/dL");
@@ -99,11 +105,11 @@ export function StepOsmolarGap() {
     const handler = setTimeout(() => {
       // Must convert units before saving to global state (similar to onSubmit)
       updateInput({
-        Na: values.Na,
-        measuredOsmolality: values.measuredOsmolality,
-        glucose: toMmol(values.glucose, glucoseUnit, GLUCOSE_CF),
-        urea: toMmol(values.urea, ureaUnit, UREA_CF),
-        ethanol: toMmol(values.ethanol, ethanolUnit, ETHANOL_CF),
+        Na: parseValue(values.Na),
+        measuredOsmolality: parseValue(values.measuredOsmolality),
+        glucose: toMmol(parseValue(values.glucose), glucoseUnit, GLUCOSE_CF),
+        urea: toMmol(parseValue(values.urea), ureaUnit, UREA_CF),
+        ethanol: toMmol(parseValue(values.ethanol), ethanolUnit, ETHANOL_CF),
         hasKetones: values.hasKetones,
         hasVisionChanges: values.hasVisionChanges,
         hasCalciumOxalate: values.hasCalciumOxalate,
@@ -155,7 +161,8 @@ export function StepOsmolarGap() {
   ) => {
     if (targetUnit === currentUnit) return;
 
-    const currentValue = form.getValues(field);
+    const globalVal = form.getValues(field);
+    const currentValue = parseValue(globalVal);
     setUnit(targetUnit);
 
     if (currentValue !== undefined && currentValue !== null) {
@@ -179,7 +186,8 @@ export function StepOsmolarGap() {
 
   // Calculate osmolar gap if we have required values
   // Use local Na if available (in case it was just entered), otherwise global
-  const sodiumValue = watchedNa ?? input.Na;
+  const inputNa = parseValue(input.Na);
+  const sodiumValue = watchedNa ?? inputNa;
 
   const osmolarGapResult =
     watchedMeasuredOsm !== undefined &&
@@ -263,7 +271,7 @@ export function StepOsmolarGap() {
       }
 
       // Path 2b: High AG (HAGMA)
-      const glucoseValue = toMmol(form.watch("glucose"), glucoseUnit, GLUCOSE_CF);
+      const glucoseValue = toMmol(watchedGlucose, glucoseUnit, GLUCOSE_CF);
 
       // DKA Check (Glucose > 350 mg/dL approx 19.4 mmol/L)
       if (glucoseValue && glucoseValue > 19.4) {
@@ -409,10 +417,10 @@ export function StepOsmolarGap() {
                             data-testid="input-na-conditional"
                             {...field}
                             tooltip=" Good —  is within the 100 - 155 "
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            onChange={field.onChange}
                             value={field.value ?? ""}
                             onMouseEnter={(e) => {
-                              const val = field.value;
+                              const val = parseValue(field.value);
                               if (val !== undefined && (val < 100 || val > 155)) {
                                 e.currentTarget.title = "value is too high / too low , please double check your input";
                               } else {
@@ -487,9 +495,9 @@ export function StepOsmolarGap() {
                           className="text-lg h-11 font-mono"
                           data-testid="input-measured-osmolality"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={field.onChange}
                           value={field.value ?? ""}
-                          tooltip={getWarning(field.value, 270, 320)}
+                          tooltip={getWarning(parseValue(field.value), 270, 320)}
                         />
                       </FormControl>
                       <FormDescription>
@@ -545,7 +553,7 @@ export function StepOsmolarGap() {
                           className="text-lg h-11 font-mono"
                           data-testid="input-glucose"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={field.onChange}
                           value={field.value ?? ""}
                         />
                       </FormControl>
@@ -616,7 +624,7 @@ export function StepOsmolarGap() {
                           className="text-lg h-11 font-mono"
                           data-testid="input-urea"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={field.onChange}
                           value={field.value ?? ""}
                         />
                       </FormControl>
@@ -687,7 +695,7 @@ export function StepOsmolarGap() {
                           className="text-lg h-11 font-mono"
                           data-testid="input-ethanol"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={field.onChange}
                           value={field.value ?? ""}
                         />
                       </FormControl>

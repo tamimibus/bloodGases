@@ -145,11 +145,11 @@ export function StepDiagnosis() {
                   <p className="text-sm text-muted-foreground">pH</p>
                   <p className={cn(
                     "text-xl font-bold font-mono",
-                    input.pH < normalRanges.pH.low ? "text-clinical-red" :
-                      input.pH > normalRanges.pH.high ? "text-clinical-orange" :
+                    Number(input.pH) < normalRanges.pH.low ? "text-clinical-red" :
+                      Number(input.pH) > normalRanges.pH.high ? "text-clinical-orange" :
                         "text-clinical-green"
                   )}>
-                    {input.pH.toFixed(2)}
+                    {Number(input.pH).toFixed(2)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Normal: {normalRanges.pH.low} - {normalRanges.pH.high}
@@ -296,7 +296,7 @@ export function StepDiagnosis() {
                     <p className="font-mono">{interpretation.osmolarGap.formula}</p>
                     <p>
                       Measured: <span className="font-mono">{interpretation.osmolarGap.measuredOsmolality}</span> |
-                      Calculated: <span className="font-mono">{interpretation.osmolarGap.calculatedOsmolality.toFixed(1)}</span>
+                      Calculated: <span className="font-mono">{Number(interpretation.osmolarGap.calculatedOsmolality).toFixed(1)}</span>
                     </p>
                     <p className={interpretation.osmolarGap.isElevated ? "text-clinical-red font-medium" : "text-clinical-green"}>
                       {interpretation.osmolarGap.isElevated
@@ -331,7 +331,7 @@ export function StepDiagnosis() {
                     <p className="text-sm text-muted-foreground">Adjusted for hyperglycemia (Glucose &gt; 200 mg/dL)</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold font-mono">{correctedSodium.toFixed(1)}</p>
+                    <p className="text-2xl font-bold font-mono">{Number(correctedSodium).toFixed(1)}</p>
                     <p className="text-xs text-muted-foreground">mmol/L</p>
                   </div>
                 </div>
@@ -343,7 +343,7 @@ export function StepDiagnosis() {
                     <p className="text-sm text-muted-foreground">Adjusted for pH abnormality</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold font-mono">{correctedPotassium.toFixed(1)}</p>
+                    <p className="text-2xl font-bold font-mono">{Number(correctedPotassium).toFixed(1)}</p>
                     <p className="text-xs text-muted-foreground">mmol/L</p>
                   </div>
                 </div>

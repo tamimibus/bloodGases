@@ -5,7 +5,7 @@ interface InputProps extends React.ComponentProps<"input"> {
   tooltip?: string
 }
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, tooltip = "tamim", ...props }, ref) => {
+  ({ className, type, tooltip, ...props }, ref) => {
     // h-9 to match icon buttons and default buttons.
     return (
       <div className="group relative inline-block w-full">

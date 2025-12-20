@@ -61,13 +61,28 @@ export function StepAnionGap() {
 
   // Auto-save changes to global state
   const values = form.watch();
+
+  const parseValue = (val: any): number | undefined => {
+    if (val === "" || val === undefined || val === null) return undefined;
+    const num = Number(val);
+    return isNaN(num) ? undefined : num;
+  };
+
   useEffect(() => {
     const handler = setTimeout(() => {
-      updateInput(values);
+      const parsedValues = {
+        Na: parseValue(values.Na),
+        Cl: parseValue(values.Cl),
+        potassium: parseValue(values.potassium),
+        albumin: parseValue(values.albumin),
+      };
+      updateInput(parsedValues);
     }, 500);
 
-    return () => clearTimeout(handler);
-  }, [JSON.stringify(values), updateInput]);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [updateInput, values]);
 
   // Ensure values are saved on unmount
   useEffect(() => {
@@ -76,10 +91,10 @@ export function StepAnionGap() {
     };
   }, [updateInput, form]);
 
-  const watchedNa = form.watch("Na");
-  const watchedCl = form.watch("Cl");
-  const watchedPotassium = form.watch("potassium");
-  const watchedAlbumin = form.watch("albumin");
+  const watchedNa = parseValue(form.watch("Na"));
+  const watchedCl = parseValue(form.watch("Cl"));
+  const watchedPotassium = parseValue(form.watch("potassium"));
+  const watchedAlbumin = parseValue(form.watch("albumin"));
 
   const onSubmit = (data: AnionGapFormData) => {
     updateInput({ Na: data.Na, Cl: data.Cl, potassium: data.potassium, albumin: data.albumin });
@@ -96,11 +111,13 @@ export function StepAnionGap() {
   const isNormalPH = input.pH !== undefined && getpHStatus(input.pH) === "normal";
   const shouldCalculateAG = isMetabolicAcidosis || isNormalPH;
 
+  const inputHCO3 = parseValue(input.HCO3);
+
   // Calculate anion gap if we have required values and conditions are met
   const anionGapResult =
     shouldCalculateAG &&
-      watchedNa !== undefined && watchedCl !== undefined && input.HCO3 !== undefined
-      ? calculateAnionGap(watchedNa, watchedCl, input.HCO3, watchedAlbumin)
+      watchedNa !== undefined && watchedCl !== undefined && inputHCO3 !== undefined
+      ? calculateAnionGap(watchedNa, watchedCl, inputHCO3, watchedAlbumin)
       : null;
 
   const getWarning = (val: number | undefined, min: number, max: number) => {
@@ -206,9 +223,9 @@ export function StepAnionGap() {
                           className="text-lg h-11 font-mono"
                           data-testid="input-na"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={field.onChange}
                           value={field.value ?? ""}
-                          tooltip={getWarning(field.value, 100, 155)}
+                          tooltip={getWarning(parseValue(field.value), 100, 155)}
                         />
                       </FormControl>
                       <FormDescription>
@@ -251,9 +268,9 @@ export function StepAnionGap() {
                           className="text-lg h-11 font-mono"
                           data-testid="input-cl"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={field.onChange}
                           value={field.value ?? ""}
-                          tooltip={getWarning(field.value, 90, 120)}
+                          tooltip={getWarning(parseValue(field.value), 90, 120)}
                         />
                       </FormControl>
                       <FormDescription>
@@ -296,7 +313,7 @@ export function StepAnionGap() {
                           className="text-lg h-11 font-mono"
                           data-testid="input-k"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={field.onChange}
                           value={field.value ?? ""}
                         />
                       </FormControl>
@@ -339,9 +356,9 @@ export function StepAnionGap() {
                           className="text-lg h-11 font-mono"
                           data-testid="input-albumin"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={field.onChange}
                           value={field.value ?? ""}
-                          tooltip={getWarning(field.value, 2, 6)}
+                          tooltip={getWarning(parseValue(field.value), 2, 6)}
                         />
                       </FormControl>
                       <FormDescription>
