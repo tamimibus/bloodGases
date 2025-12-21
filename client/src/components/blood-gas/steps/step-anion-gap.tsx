@@ -24,23 +24,23 @@ import { cn } from "@/lib/utils";
 const anionGapSchema = z.object({
   Na: z.coerce
     .number()
-    .min(100, "Na must be at least 100 mmol/L")
-    .max(180, "Na must be at most 180 mmol/L")
+    .min(100, "Please enter a sodium (Na) value between 100 and 180 mmol/L")
+    .max(180, "Please enter a sodium (Na) value between 100 and 180 mmol/L")
     .optional(),
   Cl: z.coerce
     .number()
-    .min(70, "Cl must be at least 70 mmol/L")
-    .max(130, "Cl must be at most 130 mmol/L")
+    .min(70, "Please enter a chloride (Cl) value between 70 and 130 mmol/L")
+    .max(130, "Please enter a chloride (Cl) value between 70 and 130 mmol/L")
     .optional(),
   potassium: z.coerce
     .number()
-    .min(0, "K must be at least 0 mmol/L")
-    .max(10, "K must be at most 10 mmol/L")
+    .min(0, "Please enter a potassium (K) value between 0 and 10 mmol/L")
+    .max(10, "Please enter a potassium (K) value between 0 and 10 mmol/L")
     .optional(),
   albumin: z.coerce
     .number()
-    .min(1, "Albumin must be at least 1 g/dL")
-    .max(6, "Albumin must be at most 6 g/dL")
+    .min(1, "Please enter an albumin value between 1 and 6 g/dL")
+    .max(6, "Please enter an albumin value between 1 and 6 g/dL")
     .optional(),
 });
 
@@ -217,9 +217,9 @@ export function StepAnionGap() {
                       </FormLabel>
                       <FormControl>
                         <Input
+                          id="Na"
                           type="number"
-                          step="0.1"
-                          placeholder="140"
+                          placeholder="135-145"
                           className="text-lg h-11 font-mono"
                           data-testid="input-na"
                           {...field}
@@ -262,9 +262,9 @@ export function StepAnionGap() {
                       </FormLabel>
                       <FormControl>
                         <Input
+                          id="Cl"
                           type="number"
-                          step="0.1"
-                          placeholder="102"
+                          placeholder="98-107"
                           className="text-lg h-11 font-mono"
                           data-testid="input-cl"
                           {...field}
@@ -308,7 +308,6 @@ export function StepAnionGap() {
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.1"
                           placeholder="4.0"
                           className="text-lg h-11 font-mono"
                           data-testid="input-k"
@@ -351,7 +350,6 @@ export function StepAnionGap() {
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.1"
                           placeholder="4.0"
                           className="text-lg h-11 font-mono"
                           data-testid="input-albumin"

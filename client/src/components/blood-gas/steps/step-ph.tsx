@@ -108,7 +108,6 @@ return (
                   <FormControl>
                     <Input
                       type="number"
-                      step="0.01"
                       placeholder="7.40"
                       className="text-2xl h-14 font-mono"
                       data-testid="input-ph"

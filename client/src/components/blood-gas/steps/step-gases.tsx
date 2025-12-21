@@ -144,7 +144,6 @@ export function StepGases() {
                         <FormControl>
                           <Input
                             type="number"
-                            step="0.1"
                             placeholder="40"
                             className="text-xl h-12 font-mono"
                             data-testid="input-pco2"
@@ -186,7 +185,6 @@ export function StepGases() {
                         <FormControl>
                           <Input
                             type="number"
-                            step="0.1"
                             placeholder="24"
                             className="text-xl h-12 font-mono"
                             data-testid="input-hco3"

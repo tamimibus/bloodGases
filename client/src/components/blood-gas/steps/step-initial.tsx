@@ -26,18 +26,18 @@ import { SidebarMenuButton } from "@/components/ui/sidebar";
 const initialSchema = z.object({
   pH: z.coerce
     .number()
-    .min(0, "pH must be at least 6.8")
-    .max(14, "pH must be at most 7.8")
+    .min(6.8, "Please enter a pH value between 6.8 and 7.8")
+    .max(7.8, "Please enter a pH value between 6.8 and 7.8")
     .optional(),
   pCO2: z.coerce
     .number()
-    .min(10, "pCO2 must be at least 10 mmHg")
-    .max(100, "pCO2 must be at most 100 mmHg")
+    .min(10, "Please enter a pCO2 value between 10 and 100 mmHg")
+    .max(100, "Please enter a pCO2 value between 10 and 100 mmHg")
     .optional(),
   HCO3: z.coerce
     .number()
-    .min(5, "HCO3 must be at least 5 mmol/L")
-    .max(45, "HCO3 must be at most 45 mmol/L")
+    .min(5, "Please enter a HCO3 value between 5 and 45 mmol/L")
+    .max(45, "Please enter a HCO3 value between 5 and 45 mmol/L")
     .optional(),
 });
 
@@ -196,7 +196,6 @@ export function StepInitial() {
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
                         placeholder="7.40"
                         className="text-2xl h-14 font-mono"
                         data-testid="input-ph"
@@ -260,7 +259,6 @@ export function StepInitial() {
                           <FormControl>
                             <Input
                               type="number"
-                              step="0.1"
                               placeholder="40"
                               className="text-xl h-12 font-mono"
                               data-testid="input-pco2"
@@ -308,7 +306,6 @@ export function StepInitial() {
                           <FormControl>
                             <Input
                               type="number"
-                              step="0.1"
                               placeholder="24"
                               className="text-xl h-12 font-mono"
                               data-testid="input-hco3"

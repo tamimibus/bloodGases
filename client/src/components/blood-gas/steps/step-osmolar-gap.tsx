@@ -23,28 +23,28 @@ import { cn } from "@/lib/utils";
 const osmolarGapSchema = z.object({
   Na: z.coerce
     .number()
-    .min(100, "Sodium must be at least 100 mmol/L")
-    .max(200, "Sodium must be at most 200 mmol/L")
+    .min(100, "Please enter a sodium value between 100 and 200 mmol/L")
+    .max(200, "Please enter a sodium value between 100 and 200 mmol/L")
     .optional(),
   measuredOsmolality: z.coerce
     .number()
-    .min(200, "Measured osmolality must be at least 200 mOsm/kg")
-    .max(400, "Measured osmolality must be at most 400 mOsm/kg")
+    .min(200, "Please enter an osmolality value between 200 and 400 mOsm/kg")
+    .max(400, "Please enter an osmolality value between 200 and 400 mOsm/kg")
     .optional(),
   glucose: z.coerce
     .number()
-    .min(0, "Glucose must be at least 0")
-    .max(2000, "Glucose value is too high") // Relaxed for mg/dL
+    .min(0, "Glucose value must be positive")
+    .max(2000, "Glucose value seems too high - please verify")
     .optional(),
   urea: z.coerce
     .number()
-    .min(0, "Urea must be at least 0")
-    .max(500, "Urea value is too high") // Relaxed for mg/dL
+    .min(0, "Urea value must be positive")
+    .max(500, "Urea value seems too high - please verify")
     .optional(),
   ethanol: z.coerce
     .number()
-    .min(0, "Ethanol must be at least 0")
-    .max(1000, "Ethanol value is too high") // Relaxed for mg/dL
+    .min(0, "Ethanol value must be positive")
+    .max(1000, "Ethanol value seems too high - please verify")
     .optional(),
   hasKetones: z.boolean().optional(),
   hasVisionChanges: z.boolean().optional(),
@@ -411,7 +411,6 @@ export function StepOsmolarGap() {
                         <FormControl>
                           <Input
                             type="number"
-                            step="1"
                             placeholder="140"
                             className="text-lg h-11 font-mono bg-white"
                             data-testid="input-na-conditional"
@@ -490,7 +489,6 @@ export function StepOsmolarGap() {
                       <FormControl>
                         <Input
                           type="number"
-                          step="1"
                           placeholder="290"
                           className="text-lg h-11 font-mono"
                           data-testid="input-measured-osmolality"
@@ -548,7 +546,6 @@ export function StepOsmolarGap() {
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.1"
                           placeholder={glucoseUnit === "mmol/L" ? "5.0" : "90"}
                           className="text-lg h-11 font-mono"
                           data-testid="input-glucose"
@@ -619,7 +616,6 @@ export function StepOsmolarGap() {
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.1"
                           placeholder={ureaUnit === "mmol/L" ? "5.0" : "14"}
                           className="text-lg h-11 font-mono"
                           data-testid="input-urea"
@@ -690,7 +686,6 @@ export function StepOsmolarGap() {
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.1"
                           placeholder="0"
                           className="text-lg h-11 font-mono"
                           data-testid="input-ethanol"
