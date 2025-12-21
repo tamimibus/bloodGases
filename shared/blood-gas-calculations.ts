@@ -108,17 +108,33 @@ export function calculateWintersFormula(
   const normHCO3 = Number(HCO3);
   const normActualPCO2 = Number(actualPCO2);
 
+  // Chronic (Expected PCO2) = (1.5 * HCO3) + 8
   const expectedPCO2 = 1.5 * normHCO3 + 8;
   const expectedLow = expectedPCO2 - 2;
   const expectedHigh = expectedPCO2 + 2;
 
+  const formula = `Expected pCO₂ = (1.5 × ${normHCO3}) + 8 ± 2 = ${expectedPCO2.toFixed(1)} (${expectedLow.toFixed(1)} - ${expectedHigh.toFixed(1)} mmHg)`;
+
   let status: CompensationStatus;
+  let interpretation: string;
+
   if (normActualPCO2 >= expectedLow && normActualPCO2 <= expectedHigh) {
+    // PCO2 = Chronic +/- 2
+    interpretation = "Compensated metabolic acidosis";
     status = "appropriate";
   } else if (normActualPCO2 < expectedLow) {
+    // PCO2 < Chronic - 2
+    interpretation = "Metabolic acidosis with secondary respiratory alkalosis";
     status = "excessive";
-  } else {
+  } else if (normActualPCO2 >= 45 && normActualPCO2 < expectedHigh) {
+    // PCO2 between 45 & (Chronic + 2)
+    // Note: This condition seems unusual, but following user's exact spec
+    interpretation = "Uncompensated metabolic acidosis";
     status = "inadequate";
+  } else {
+    // PCO2 > 45 (or PCO2 > expectedHigh if expectedHigh > 45)
+    interpretation = "Combined Metabolic acidosis and respiratory acidosis";
+    status = "mixed_disorder";
   }
 
   return {
@@ -126,9 +142,7 @@ export function calculateWintersFormula(
     expectedPCO2High: expectedHigh,
     actualPCO2: normActualPCO2,
     status,
-    formula: `Expected pCO₂ = (1.5 × ${normHCO3}) + 8 ± 2 = ${expectedLow.toFixed(
-      1
-    )} - ${expectedHigh.toFixed(1)} mmHg`,
+    formula,
   };
 }
 
@@ -190,71 +204,76 @@ export function calculateRespiratoryCompensation(
   const normPCO2 = Number(pCO2);
   const normHCO3 = Number(HCO3);
 
-  const normalPCO2 = 40;
-  const normalHCO3 = 24;
-  const pCO2Change = Math.abs(normPCO2 - normalPCO2);
-  const HCO3Change = normHCO3 - normalHCO3;
-
-  let expectedHCO3Change: number;
+  let expectedHCO3: number;
   let rule: string;
   let chronicity: Chronicity;
   let status: CompensationStatus;
+  let interpretation: string;
 
   if (disorder === "respiratory_acidosis") {
-    const acuteExpected = (pCO2Change / 10) * 1;
-    const chronicExpected = (pCO2Change / 10) * 4;
+    // Chronic = 24 + [(PCO2 - 40) / 2.5]
+    expectedHCO3 = 24 + ((normPCO2 - 40) / 2.5);
+    const chronicLow = expectedHCO3 - 2;
+    const chronicHigh = expectedHCO3 + 2;
 
-    if (Math.abs(HCO3Change - acuteExpected) <= 2) {
-      chronicity = "acute";
-      expectedHCO3Change = acuteExpected;
-      rule = `Acute: For every 10mmHg pCO₂ rise above 40, expect HCO₃⁻ to increase by 1mmol/L`;
-      status = "appropriate";
-    } else if (Math.abs(HCO3Change - chronicExpected) <= 2) {
+    rule = `Chronic expected HCO₃⁻ = 24 + [(pCO₂ - 40) / 2.5] = 24 + [(${normPCO2} - 40) / 2.5] = ${expectedHCO3.toFixed(1)} (±2: ${chronicLow.toFixed(1)}-${chronicHigh.toFixed(1)})`;
+
+    if (normHCO3 >= chronicLow && normHCO3 <= chronicHigh) {
+      // HCO3 = Chronic +/- 2
+      interpretation = "Compensated chronic Respiratory acidosis";
       chronicity = "chronic";
-      expectedHCO3Change = chronicExpected;
-      rule = `Chronic: For every 10mmHg pCO₂ rise above 40, expect HCO₃⁻ to increase by 4mmol/L`;
       status = "appropriate";
-    } else if (HCO3Change > chronicExpected + 2) {
-      chronicity = "unknown";
-      expectedHCO3Change = chronicExpected;
-      rule = `Chronic expected: HCO₃⁻ increase of ${chronicExpected.toFixed(1)}mmol/L`;
+    } else if (normHCO3 > chronicHigh) {
+      // HCO3 > Chronic + 2
+      interpretation = "Primary RA with secondary M. alkalosis";
+      chronicity = "chronic";
       status = "excessive";
-    } else {
-      chronicity = "unknown";
-      expectedHCO3Change = acuteExpected;
-      rule = `Expected: HCO₃⁻ increase of ${acuteExpected.toFixed(1)} (acute) to ${chronicExpected.toFixed(1)} (chronic) mmol/L`;
+    } else if (normHCO3 >= 22 && normHCO3 < chronicLow) {
+      // HCO3 between 22 & (Chronic - 2)
+      interpretation = "Acute uncompensated Respiratory acidosis";
+      chronicity = "acute";
       status = "inadequate";
+    } else {
+      // HCO3 < 22
+      interpretation = "Acute uncompensated RA with metabolic acidosis";
+      chronicity = "acute";
+      status = "mixed_disorder";
     }
   } else {
-    const acuteExpected = (pCO2Change / 10) * -2;
-    const chronicExpected = (pCO2Change / 10) * -5;
+    // Respiratory Alkalosis
+    // Chronic = 24 - [(40 - PCO2) / 2]
+    expectedHCO3 = 24 - ((40 - normPCO2) / 2);
+    const chronicLow = expectedHCO3 - 2;
+    const chronicHigh = expectedHCO3 + 2;
 
-    if (Math.abs(HCO3Change - acuteExpected) <= 2) {
-      chronicity = "acute";
-      expectedHCO3Change = acuteExpected;
-      rule = `Acute: For every 10mmHg pCO₂ fall below 40, expect HCO₃⁻ to decrease by 2mmol/L`;
-      status = "appropriate";
-    } else if (Math.abs(HCO3Change - chronicExpected) <= 2) {
+    rule = `Chronic expected HCO₃⁻ = 24 - [(40 - pCO₂) / 2] = 24 - [(40 - ${normPCO2}) / 2] = ${expectedHCO3.toFixed(1)} (±2: ${chronicLow.toFixed(1)}-${chronicHigh.toFixed(1)})`;
+
+    if (normHCO3 >= chronicLow && normHCO3 <= chronicHigh) {
+      // HCO3 = Chronic +/- 2
+      interpretation = "Compensated chronic Respiratory Alkalosis";
       chronicity = "chronic";
-      expectedHCO3Change = chronicExpected;
-      rule = `Chronic: For every 10mmHg pCO₂ fall below 40, expect HCO₃⁻ to decrease by 5mmol/L`;
       status = "appropriate";
-    } else if (HCO3Change < chronicExpected - 2) {
-      chronicity = "unknown";
-      expectedHCO3Change = chronicExpected;
-      rule = `Chronic expected: HCO₃⁻ decrease of ${Math.abs(chronicExpected).toFixed(1)}mmol/L`;
+    } else if (normHCO3 < chronicLow) {
+      // HCO3 < Chronic - 2
+      interpretation = "Primary Respiratory Alkalosis with secondary metabolic acidosis";
+      chronicity = "chronic";
       status = "excessive";
-    } else {
-      chronicity = "unknown";
-      expectedHCO3Change = acuteExpected;
-      rule = `Expected: HCO₃⁻ decrease of ${Math.abs(acuteExpected).toFixed(1)} (acute) to ${Math.abs(chronicExpected).toFixed(1)} (chronic) mmol/L`;
+    } else if (normHCO3 >= 26 && normHCO3 < chronicHigh) {
+      // HCO3 between 26 & (Chronic + 2)
+      interpretation = "Acute uncompensated Respiratory alkalosis";
+      chronicity = "acute";
       status = "inadequate";
+    } else {
+      // HCO3 > 26 (and > chronicHigh since we checked that case already)
+      interpretation = "Combined respiratory alkalosis with metabolic alkalosis";
+      chronicity = "acute";
+      status = "mixed_disorder";
     }
   }
 
   return {
-    expectedChange: `${expectedHCO3Change >= 0 ? "+" : ""}${expectedHCO3Change.toFixed(1)} mmol/L`,
-    actualChange: `${HCO3Change >= 0 ? "+" : ""}${HCO3Change.toFixed(1)} mmol/L`,
+    expectedChange: `Expected HCO₃⁻: ${expectedHCO3.toFixed(1)} mmol/L`,
+    actualChange: `Actual HCO₃⁻: ${normHCO3} mmol/L`,
     status,
     chronicity,
     rule,
@@ -268,17 +287,32 @@ export function calculateMetabolicAlkalosisCompensation(
   const normHCO3 = Number(HCO3);
   const normActualPCO2 = Number(actualPCO2);
 
+  // Chronic = (0.7 * HCO3) + 20
   const expectedPCO2 = 0.7 * normHCO3 + 20;
   const expectedLow = expectedPCO2 - 5;
   const expectedHigh = expectedPCO2 + 5;
 
+  const rule = `Expected pCO₂ = (0.7 × ${normHCO3}) + 20 ± 5 = ${expectedPCO2.toFixed(1)} (${expectedLow.toFixed(1)} - ${expectedHigh.toFixed(1)} mmHg)`;
+
   let status: CompensationStatus;
+  let interpretation: string;
+
   if (normActualPCO2 >= expectedLow && normActualPCO2 <= expectedHigh) {
+    // PCO2 = Chronic +/- 5
+    interpretation = "Compensated metabolic alkalosis";
     status = "appropriate";
   } else if (normActualPCO2 > expectedHigh) {
+    // PCO2 > Chronic + 5
+    interpretation = "Primary metabolic alkalosis with secondary respiratory acidosis";
     status = "excessive";
-  } else {
+  } else if (normActualPCO2 >= 35 && normActualPCO2 < expectedLow) {
+    // PCO2 between 35 & (Chronic - 5)
+    interpretation = "Uncompensated metabolic alkalosis";
     status = "inadequate";
+  } else {
+    // PCO2 < 35
+    interpretation = "Combined metabolic alkalosis & respiratory alkalosis";
+    status = "mixed_disorder";
   }
 
   return {
@@ -286,7 +320,7 @@ export function calculateMetabolicAlkalosisCompensation(
     actualChange: `Actual pCO₂: ${normActualPCO2} mmHg`,
     status,
     chronicity: "unknown",
-    rule: `Expected pCO₂ = (0.7 × ${normHCO3}) + 20 ± 5 = ${expectedLow.toFixed(1)} - ${expectedHigh.toFixed(1)} mmHg`,
+    rule,
   };
 }
 
@@ -471,7 +505,9 @@ export function interpretBloodGas(
   let deltaRatio: DeltaRatioResult | undefined;
   let compensation: CompensationResult | undefined;
 
-  if (Na !== undefined && Cl !== undefined) {
+  // Always calculate anion gap if we have Na and Cl (needed for metabolic acidosis cases)
+  const shouldCalculateAnionGap = Na !== undefined && Cl !== undefined;
+  if (shouldCalculateAnionGap) {
     if (primaryDisorder === "metabolic_acidosis" || phStatus === "normal") {
       anionGap = calculateAnionGap(Na, Cl, HCO3, albumin);
     }
@@ -486,11 +522,16 @@ export function interpretBloodGas(
     osmolarGap = calculateOsmolarGap(measuredOsmolality, Na, glucose, urea, ethanol);
   }
 
-  if (primaryDisorder === "metabolic_acidosis" && anionGap) {
+  // Handle each primary disorder type
+  if (primaryDisorder === "metabolic_acidosis") {
+    // For metabolic acidosis, ALWAYS calculate Winters formula
     wintersFormula = calculateWintersFormula(HCO3, pCO2);
 
-    if (anionGap.status === "high") {
-      deltaRatio = calculateDeltaRatio(anionGap.correctedValue, HCO3);
+    // Calculate anion gap and delta ratio if we have the required values
+    if (shouldCalculateAnionGap && anionGap) {
+      if (anionGap.status === "high") {
+        deltaRatio = calculateDeltaRatio(anionGap.correctedValue, HCO3);
+      }
     }
   } else if (primaryDisorder === "metabolic_alkalosis") {
     compensation = calculateMetabolicAlkalosisCompensation(HCO3, pCO2);
@@ -499,6 +540,15 @@ export function interpretBloodGas(
     primaryDisorder === "respiratory_alkalosis"
   ) {
     compensation = calculateRespiratoryCompensation(primaryDisorder, pCO2, HCO3);
+
+    // For respiratory acidosis with metabolic acidosis component (status: mixed_disorder)
+    // we need to calculate anion gap
+    if (compensation?.status === "mixed_disorder" && shouldCalculateAnionGap && !anionGap) {
+      anionGap = calculateAnionGap(Na, Cl, HCO3, albumin);
+      if (anionGap.status === "high") {
+        deltaRatio = calculateDeltaRatio(anionGap.correctedValue, HCO3);
+      }
+    }
   }
 
   const causes = getCausesForDisorder(
@@ -508,46 +558,9 @@ export function interpretBloodGas(
   );
 
   const secondaryDisorders: string[] = [];
-  if (wintersFormula?.status === "excessive") {
-    secondaryDisorders.push("Concurrent respiratory alkalosis");
-  } else if (wintersFormula?.status === "inadequate") {
-    secondaryDisorders.push("Concurrent respiratory acidosis");
-  }
 
-  if (compensation?.status === "excessive") {
-    if (primaryDisorder === "respiratory_acidosis") {
-      secondaryDisorders.push("Concurrent metabolic alkalosis");
-    } else if (primaryDisorder === "respiratory_alkalosis") {
-      secondaryDisorders.push("Concurrent metabolic acidosis");
-    } else if (primaryDisorder === "metabolic_alkalosis") {
-      secondaryDisorders.push("Concurrent respiratory acidosis");
-    }
-  } else if (compensation?.status === "inadequate") {
-    if (primaryDisorder === "respiratory_acidosis") {
-      secondaryDisorders.push("Concurrent metabolic acidosis");
-    } else if (primaryDisorder === "respiratory_alkalosis") {
-      secondaryDisorders.push("Concurrent metabolic alkalosis");
-    } else if (primaryDisorder === "metabolic_alkalosis") {
-      secondaryDisorders.push("Concurrent respiratory alkalosis");
-    }
-  }
-
-  // Special handling for pH 7.4: Display both diagnoses with metabolic issue as secondary
-  if (pH === 7.4) {
-    if (primaryDisorder === "respiratory_acidosis" && !secondaryDisorders.includes("Concurrent metabolic alkalosis")) {
-      secondaryDisorders.push("Concurrent metabolic alkalosis");
-    } else if (primaryDisorder === "respiratory_alkalosis" && !secondaryDisorders.includes("Concurrent metabolic acidosis")) {
-      secondaryDisorders.push("Concurrent metabolic acidosis");
-    }
-  }
-
-  if (deltaRatio?.status === "mixed_nagma_hagma" || deltaRatio?.status === "pure_nagma_hagma") {
-    secondaryDisorders.push("Mixed HAGMA and NAGMA");
-  } else if (deltaRatio?.status === "hagma_metabolic_alkalosis") {
-    secondaryDisorders.push("Concurrent metabolic alkalosis");
-  }
-
-  let summary = `${formatDisorderName(primaryDisorder)}`;
+  // Build summary based on the new interpretation strings
+  let summary = "";
 
   // Check if strict normal (all parameters within normal range)
   const isStrictNormal =
@@ -558,20 +571,77 @@ export function interpretBloodGas(
   if (isStrictNormal) {
     summary = "No acid-base disturbance";
   } else if (primaryDisorder === "normal") {
-    // Normal pH but abnormal components (Mixed or Compensated)
-    // For now, keep it as "Normal" or maybe "Normal pH (Mixed Disorder?)"
-    // The requirement focuses on "If the 3 numbers ... are within normal limit"
     summary = "Normal pH (Possible mixed disorder/compensated)";
-  }
+  } else if (primaryDisorder === "metabolic_acidosis" && wintersFormula) {
+    // For metabolic acidosis, use Winters formula interpretation
+    // The interpretation is already built into the calculation
+    summary = wintersFormula.status === "appropriate"
+      ? "Compensated metabolic acidosis"
+      : wintersFormula.status === "excessive"
+        ? "Metabolic acidosis with secondary respiratory alkalosis"
+        : wintersFormula.status === "inadequate"
+          ? "Uncompensated metabolic acidosis"
+          : "Combined Metabolic acidosis and respiratory acidosis";
 
-  if (anionGap && primaryDisorder === "metabolic_acidosis") {
-    summary += ` with ${anionGap.status === "high" ? "elevated" : anionGap.status === "normal" ? "normal" : "low"} anion gap`;
-  }
-  if (compensation?.chronicity && compensation.chronicity !== "unknown") {
-    summary = `${compensation.chronicity.charAt(0).toUpperCase() + compensation.chronicity.slice(1)} ${summary}`;
-  }
-  if (secondaryDisorders.length > 0) {
-    summary += ` (${secondaryDisorders.join("; ")})`;
+    // Add anion gap type information
+    if (anionGap) {
+      if (anionGap.status === "high") {
+        summary += " - HAGMA";
+        // Add delta ratio interpretation if available
+        if (deltaRatio) {
+          if (deltaRatio.status === "mixed_nagma_hagma" || deltaRatio.status === "pure_nagma_hagma") {
+            summary += " with concurrent NAGMA";
+          } else if (deltaRatio.status === "hagma_metabolic_alkalosis") {
+            summary += " with concurrent metabolic alkalosis";
+          }
+        }
+      } else if (anionGap.status === "normal") {
+        summary += " - NAGMA";
+      } else {
+        summary += " - Low/Negative AG";
+      }
+    }
+  } else if (compensation) {
+    // For respiratory and metabolic alkalosis, the interpretation is in the rule/status
+    // We need to extract a cleaner summary from the compensation result
+    if (primaryDisorder === "respiratory_acidosis") {
+      if (compensation.status === "appropriate") {
+        summary = "Compensated chronic Respiratory acidosis";
+      } else if (compensation.status === "excessive") {
+        summary = "Primary RA with secondary M. alkalosis";
+      } else if (compensation.status === "inadequate") {
+        summary = "Acute uncompensated Respiratory acidosis";
+      } else if (compensation.status === "mixed_disorder") {
+        summary = "Acute uncompensated RA with metabolic acidosis";
+        // Calculate anion gap for this case
+        if (anionGap) {
+          summary += anionGap.status === "high" ? " (HAGMA)" : " (NAGMA)";
+        }
+      }
+    } else if (primaryDisorder === "respiratory_alkalosis") {
+      if (compensation.status === "appropriate") {
+        summary = "Compensated chronic Respiratory Alkalosis";
+      } else if (compensation.status === "excessive") {
+        summary = "Primary Respiratory Alkalosis with secondary metabolic acidosis";
+      } else if (compensation.status === "inadequate") {
+        summary = "Acute uncompensated Respiratory alkalosis";
+      } else if (compensation.status === "mixed_disorder") {
+        summary = "Combined respiratory alkalosis with metabolic alkalosis";
+      }
+    } else if (primaryDisorder === "metabolic_alkalosis") {
+      if (compensation.status === "appropriate") {
+        summary = "Compensated metabolic alkalosis";
+      } else if (compensation.status === "excessive") {
+        summary = "Primary metabolic alkalosis with secondary respiratory acidosis";
+      } else if (compensation.status === "inadequate") {
+        summary = "Uncompensated metabolic alkalosis";
+      } else if (compensation.status === "mixed_disorder") {
+        summary = "Combined metabolic alkalosis & respiratory alkalosis";
+      }
+    }
+  } else {
+    // Fallback for any other cases
+    summary = formatDisorderName(primaryDisorder);
   }
 
   return {
