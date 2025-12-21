@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, ArrowRight, Calculator, Atom } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calculator, Atom, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,26 +22,10 @@ import { calculateAnionGap } from "@/lib/blood-gas-logic";
 import { cn } from "@/lib/utils";
 
 const anionGapSchema = z.object({
-  Na: z.coerce
-    .number()
-    .min(100, "Please enter a sodium (Na) value between 100 and 180 mmol/L")
-    .max(180, "Please enter a sodium (Na) value between 100 and 180 mmol/L")
-    .optional(),
-  Cl: z.coerce
-    .number()
-    .min(70, "Please enter a chloride (Cl) value between 70 and 130 mmol/L")
-    .max(130, "Please enter a chloride (Cl) value between 70 and 130 mmol/L")
-    .optional(),
-  potassium: z.coerce
-    .number()
-    .min(0, "Please enter a potassium (K) value between 0 and 10 mmol/L")
-    .max(10, "Please enter a potassium (K) value between 0 and 10 mmol/L")
-    .optional(),
-  albumin: z.coerce
-    .number()
-    .min(1, "Please enter an albumin value between 1 and 6 g/dL")
-    .max(6, "Please enter an albumin value between 1 and 6 g/dL")
-    .optional(),
+  Na: z.coerce.number().optional(),
+  Cl: z.coerce.number().optional(),
+  potassium: z.coerce.number().optional(),
+  albumin: z.coerce.number().optional(),
 });
 
 type AnionGapFormData = z.infer<typeof anionGapSchema>;
@@ -120,11 +104,17 @@ export function StepAnionGap() {
       ? calculateAnionGap(watchedNa, watchedCl, inputHCO3, watchedAlbumin)
       : null;
 
-  const getWarning = (val: number | undefined, min: number, max: number) => {
-    if (val !== undefined && (val < min || val > max)) {
-      return "value is too high / too low , please double check your input";
+  const getWarningText = (val: number | undefined, min: number, max: number, label: string) => {
+    if (val === undefined) return null;
+    if (val < min || val > max) {
+      return (
+        <div className="flex items-center gap-2 text-amber-600 font-medium text-sm mt-1 bg-amber-50 p-2 rounded border border-amber-200">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{label} value is unusual. Please double check.</span>
+        </div>
+      );
     }
-    return undefined;
+    return null;
   };
 
   const getAGStatusInfo = (status: string | undefined) => {
@@ -204,182 +194,205 @@ export function StepAnionGap() {
                 </div>
               )}
 
-              <div className="grid gap-6 md:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {/* Na Input */}
-                <FormField
-                  control={form.control}
-                  name="Na"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold flex items-center gap-2">
-                        <Atom className="w-4 h-4" />
-                        Na⁺ (mmol/L)
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          id="Na"
-                          type="number"
-                          placeholder="135-145"
-                          className="text-lg h-11 font-mono"
-                          data-testid="input-na"
-                          {...field}
-                          onChange={field.onChange}
-                          value={field.value ?? ""}
-                          tooltip={getWarning(parseValue(field.value), 100, 155)}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Normal: {normalRanges.Na.low}-{normalRanges.Na.high}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="Na"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold flex items-center gap-2">
+                          <Atom className="w-4 h-4" />
+                          Na⁺ (mmol/L)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            id="Na"
+                            type="number"
+                            placeholder="135-145"
+                            className="text-lg h-11 font-mono"
+                            data-testid="input-na"
+                            {...field}
+                            onChange={field.onChange}
+                            value={field.value ?? ""}
+                            tooltip={`Expected range: 100 - 180`}
+                          />
+                        </FormControl>
 
-                {watchedNa !== undefined && (
-                  <div className="pt-2">
-                    <ValueRangeIndicator
-                      value={watchedNa}
-                      min={100}
-                      max={180}
-                      normalLow={normalRanges.Na.low}
-                      normalHigh={normalRanges.Na.high}
-                      unit=" mmol/L"
-                      label="Na⁺"
-                    />
-                  </div>
-                )}
+                        {getWarningText(watchedNa, 100, 180, "Na⁺")}
+
+                        {watchedNa !== undefined && (
+                          <div className="pt-2">
+                            <ValueRangeIndicator
+                              value={watchedNa}
+                              min={100}
+                              max={180}
+                              normalLow={normalRanges.Na.low}
+                              normalHigh={normalRanges.Na.high}
+                              unit=" mmol/L"
+                              label="Na⁺"
+                            />
+                          </div>
+                        )}
+
+                        <FormDescription>
+                          Normal: {normalRanges.Na.low}-{normalRanges.Na.high}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {/* Cl Input */}
-                <FormField
-                  control={form.control}
-                  name="Cl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold flex items-center gap-2">
-                        <Atom className="w-4 h-4" />
-                        Cl⁻ (mmol/L)
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          id="Cl"
-                          type="number"
-                          placeholder="98-107"
-                          className="text-lg h-11 font-mono"
-                          data-testid="input-cl"
-                          {...field}
-                          onChange={field.onChange}
-                          value={field.value ?? ""}
-                          tooltip={getWarning(parseValue(field.value), 90, 120)}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Normal: {normalRanges.Cl.low}-{normalRanges.Cl.high}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="Cl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold flex items-center gap-2">
+                          <Atom className="w-4 h-4" />
+                          Cl⁻ (mmol/L)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            id="Cl"
+                            type="number"
+                            placeholder="98-107"
+                            className="text-lg h-11 font-mono"
+                            data-testid="input-cl"
+                            {...field}
+                            onChange={field.onChange}
+                            value={field.value ?? ""}
+                            tooltip={`Expected range: 70 - 130`}
+                          />
+                        </FormControl>
 
-                {watchedCl !== undefined && (
-                  <div className="pt-2">
-                    <ValueRangeIndicator
-                      value={watchedCl}
-                      min={70}
-                      max={130}
-                      normalLow={normalRanges.Cl.low}
-                      normalHigh={normalRanges.Cl.high}
-                      unit=" mmol/L"
-                      label="Cl⁻"
-                    />
-                  </div>
-                )}
+                        {getWarningText(watchedCl, 70, 130, "Cl⁻")}
+
+                        {watchedCl !== undefined && (
+                          <div className="pt-2">
+                            <ValueRangeIndicator
+                              value={watchedCl}
+                              min={70}
+                              max={130}
+                              normalLow={normalRanges.Cl.low}
+                              normalHigh={normalRanges.Cl.high}
+                              unit=" mmol/L"
+                              label="Cl⁻"
+                            />
+                          </div>
+                        )}
+
+                        <FormDescription>
+                          Normal: {normalRanges.Cl.low}-{normalRanges.Cl.high}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {/* Potassium Input */}
-                <FormField
-                  control={form.control}
-                  name="potassium"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold flex items-center gap-2">
-                        <Atom className="w-4 h-4" />
-                        K⁺ (mmol/L) <span className="text-muted-foreground font-normal">(optional)</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="4.0"
-                          className="text-lg h-11 font-mono"
-                          data-testid="input-k"
-                          {...field}
-                          onChange={field.onChange}
-                          value={field.value ?? ""}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Normal: {normalRanges.K.low}-{normalRanges.K.high}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="potassium"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold flex items-center gap-2">
+                          <Atom className="w-4 h-4" />
+                          K⁺ (mmol/L) <span className="text-muted-foreground font-normal">(optional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            id="potassium"
+                            type="number"
+                            placeholder="4.0"
+                            className="text-lg h-11 font-mono"
+                            data-testid="input-k"
+                            {...field}
+                            onChange={field.onChange}
+                            value={field.value ?? ""}
+                            tooltip={`Expected range: 1 - 10`}
+                          />
+                        </FormControl>
 
-                {watchedPotassium !== undefined && (
-                  <div className="pt-2">
-                    <ValueRangeIndicator
-                      value={watchedPotassium}
-                      min={1}
-                      max={10}
-                      normalLow={normalRanges.K.low}
-                      normalHigh={normalRanges.K.high}
-                      unit=" mmol/L"
-                      label="K⁺"
-                    />
-                  </div>
-                )}
+                        {getWarningText(watchedPotassium, 1, 10, "K⁺")}
+
+                        {watchedPotassium !== undefined && (
+                          <div className="pt-2">
+                            <ValueRangeIndicator
+                              value={watchedPotassium}
+                              min={1}
+                              max={10}
+                              normalLow={normalRanges.K.low}
+                              normalHigh={normalRanges.K.high}
+                              unit=" mmol/L"
+                              label="K⁺"
+                            />
+                          </div>
+                        )}
+
+                        <FormDescription>
+                          Normal: {normalRanges.K.low}-{normalRanges.K.high}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {/* Albumin Input (Optional) */}
-                <FormField
-                  control={form.control}
-                  name="albumin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold">
-                        Albumin (g/dL) <span className="text-muted-foreground font-normal">(optional)</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="4.0"
-                          className="text-lg h-11 font-mono"
-                          data-testid="input-albumin"
-                          {...field}
-                          onChange={field.onChange}
-                          value={field.value ?? ""}
-                          tooltip={getWarning(parseValue(field.value), 2, 6)}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        For albumin correction
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="albumin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">
+                          Albumin (g/dL) <span className="text-muted-foreground font-normal">(optional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            id="albumin"
+                            type="number"
+                            placeholder="4.0"
+                            className="text-lg h-11 font-mono"
+                            data-testid="input-albumin"
+                            {...field}
+                            onChange={field.onChange}
+                            value={field.value ?? ""}
+                            tooltip={`Expected range: 2 - 6`}
+                          />
+                        </FormControl>
 
-                {watchedAlbumin !== undefined && (
-                  <div className="pt-2">
-                    <ValueRangeIndicator
-                      value={watchedAlbumin}
-                      min={1}
-                      max={6}
-                      normalLow={3.5}
-                      normalHigh={5.0}
-                      unit=" g/dL"
-                      label="Albumin"
-                    />
-                  </div>
-                )}
+                        {getWarningText(watchedAlbumin, 1, 6, "Albumin")}
+
+                        {watchedAlbumin !== undefined && (
+                          <div className="pt-2">
+                            <ValueRangeIndicator
+                              value={watchedAlbumin}
+                              min={1}
+                              max={6}
+                              normalLow={3.5}
+                              normalHigh={5.0}
+                              unit=" g/dL"
+                              label="Albumin"
+                            />
+                          </div>
+                        )}
+
+                        <FormDescription>
+                          For albumin correction
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               {/* Calculation Result */}
@@ -392,7 +405,7 @@ export function StepAnionGap() {
                     {anionGapResult.correctionFormula && (
                       <>
                         <p className="text-sm text-muted-foreground mt-2 mb-1">Albumin Correction:</p>
-                        <p className="font-mono text-base">{anionGapResult.correctionFormula}</p>
+                        <p className="font-mono text-base">{anionGapResult.formula}</p>
                       </>
                     )}
                   </div>
