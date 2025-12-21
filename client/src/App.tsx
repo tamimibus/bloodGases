@@ -25,7 +25,7 @@ function Router() {
 
 function App() {
   useEffect(() => {
-    const measurementId = process.env.REACT_APP_GA_MEASUREMENT_ID
+    const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID
     initGA(measurementId);
   }, []);
 
