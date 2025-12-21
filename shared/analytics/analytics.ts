@@ -3,7 +3,7 @@ import ReactGA from "react-ga4";
 
 export const initGA = (measurementId: string | undefined): void => {
     if (!measurementId) {
-        console.error("Measurement ID is not defined");
+        console.error("Measurement ID is not defined ==");
         return;
     }
     ReactGA.initialize(measurementId);
