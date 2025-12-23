@@ -307,13 +307,13 @@ export function StepOsmolarGap() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {naWasSkippedRef.current && (
-                <div className="space-y-4 p-4 rounded-lg bg-orange-50 border border-orange-200">
+                <div className="space-y-4 p-4 rounded-lg bg-orange-50 border border-orange-200 dark:bg-orange-900/30 dark:border-orange-700">
                   <FormField
                     control={form.control}
                     name="Na"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold flex items-center gap-2">
+                        <FormLabel className="text-base font-semibold flex items-center gap-2 text-xl font-bold">
                           <Atom className="w-4 h-4 text-clinical-blue" />
                           Sodium (Na⁺)
                         </FormLabel>
@@ -321,7 +321,7 @@ export function StepOsmolarGap() {
                           <Input
                             type="number"
                             placeholder="140"
-                            className="text-lg h-11 font-mono bg-white"
+                            className="text-lg h-11 font-mono"
                             data-testid="input-na-conditional"
                             {...field}
                             onChange={field.onChange}
