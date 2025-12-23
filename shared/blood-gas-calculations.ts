@@ -81,14 +81,14 @@ export function calculateOsmolarGap(
   const normEthanol = ethanol !== undefined ? Number(ethanol) : undefined;
 
   let calculatedOsm = 2 * normNa + normGlucose + normUrea;
-  let formula = `Calculated Osm = 2×[Na⁺] + Glucose + Urea = 2×${normNa} + ${normGlucose} + ${normUrea}`;
+  let formula = `Calculated Osm = 2×[Na⁺] + Glucose + Urea = 2×${normNa.toFixed(2)} + ${normGlucose.toFixed(2)} + ${normUrea.toFixed(2)}`;
 
   if (normEthanol && normEthanol > 0) {
     calculatedOsm += normEthanol;
-    formula += ` + ${normEthanol}`;
+    formula += ` + ${normEthanol.toFixed(2)}`;
   }
 
-  formula += ` = ${calculatedOsm.toFixed(1)} mOsm/kg`;
+  formula += ` = ${calculatedOsm.toFixed(2)} mOsm/kg`;
 
   const gap = normMeasuredOsm - calculatedOsm;
 
