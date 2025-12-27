@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { useWizard } from "./wizard-context";
+import { trackStepView } from "@shared/analytics/analytics";
 import { StepIndicator } from "./step-indicator";
 import { Flowchart } from "./flowchart";
 import {
@@ -27,6 +29,17 @@ function StepContent() {
 
 export function Wizard() {
   const { currentStep } = useWizard();
+
+  useEffect(() => {
+    const stepNames: Record<number, string> = {
+      1: "Initial Parameters",
+      2: "Anion Gap",
+      3: "Osmolar Gap",
+      4: "Diagnosis"
+    };
+
+    trackStepView(currentStep, stepNames[currentStep] || `Step ${currentStep}`);
+  }, [currentStep]);
 
   return (
     <div className="min-h-screen bg-background">

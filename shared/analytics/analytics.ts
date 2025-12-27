@@ -12,3 +12,11 @@ export const initGA = (measurementId: string | undefined): void => {
 export const trackPageView = (path: string): void => {
     ReactGA.send({ hitType: "pageview", page: path });
 };
+
+export const trackStepView = (step: number, stepName: string): void => {
+    ReactGA.send({
+        hitType: "pageview",
+        page: `step-${step}`,
+        title: stepName
+    });
+};
