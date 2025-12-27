@@ -56,9 +56,9 @@ export interface AnionGapResult {
 
 export interface OsmolarGapResult {
   calculatedOsmolality: number;
-  measuredOsmolality: number;
-  gap: number;
-  isElevated: boolean;
+  measuredOsmolality?: number;
+  gap?: number;
+  isElevated?: boolean;
   formula: string;
 }
 

@@ -162,8 +162,7 @@ export function StepOsmolarGap() {
   const sodiumValue = watchedNa ?? parseValue(input.Na);
 
   const osmolarGapResult =
-    watchedMeasuredOsm !== undefined &&
-      sodiumValue !== undefined &&
+    sodiumValue !== undefined &&
       watchedGlucose !== undefined &&
       watchedUrea !== undefined
       ? calculateOsmolarGap(
@@ -496,14 +495,16 @@ export function StepOsmolarGap() {
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Measured</p>
-                      <p className="text-2xl font-bold font-mono">{osmolarGapResult.measuredOsmolality}</p>
+                      <p className="text-2xl font-bold font-mono">{osmolarGapResult.measuredOsmolality ?? "-"}</p>
                       <p className="text-sm text-muted-foreground">mOsm/kg</p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground">Osmolar Gap</p>
-                      <p className={cn("text-3xl font-bold font-mono", osmolarGapResult.isElevated ? "text-clinical-red" : "text-clinical-green")}>{osmolarGapResult.gap.toFixed(1)}</p>
-                      <p className="text-sm text-muted-foreground">mOsm/kg</p>
-                    </div>
+                    {osmolarGapResult.gap !== undefined && (
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground">Osmolar Gap</p>
+                        <p className={cn("text-3xl font-bold font-mono", osmolarGapResult.isElevated ? "text-clinical-red" : "text-clinical-green")}>{osmolarGapResult.gap.toFixed(1)}</p>
+                        <p className="text-sm text-muted-foreground">mOsm/kg</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

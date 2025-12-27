@@ -68,13 +68,12 @@ export function calculateAnionGap(
 }
 
 export function calculateOsmolarGap(
-  measuredOsmolality: number,
+  measuredOsmolality: number | undefined,
   Na: number,
   glucose: number,
   urea: number,
   ethanol?: number
 ): OsmolarGapResult {
-  const normMeasuredOsm = Number(measuredOsmolality);
   const normNa = Number(Na);
   const normGlucose = Number(glucose);
   const normUrea = Number(urea);
@@ -90,13 +89,21 @@ export function calculateOsmolarGap(
 
   formula += ` = ${calculatedOsm.toFixed(2)} mOsm/kg`;
 
-  const gap = normMeasuredOsm - calculatedOsm;
+  if (measuredOsmolality !== undefined) {
+    const normMeasuredOsm = Number(measuredOsmolality);
+    const gap = normMeasuredOsm - calculatedOsm;
+
+    return {
+      calculatedOsmolality: calculatedOsm,
+      measuredOsmolality: normMeasuredOsm,
+      gap,
+      isElevated: gap > 10,
+      formula,
+    };
+  }
 
   return {
     calculatedOsmolality: calculatedOsm,
-    measuredOsmolality: normMeasuredOsm,
-    gap,
-    isElevated: gap > 10,
     formula,
   };
 }
