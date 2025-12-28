@@ -32,10 +32,10 @@ export function Wizard() {
 
   useEffect(() => {
     const stepNames: Record<number, string> = {
-      1: "Initial Parameters",
-      2: "Anion Gap",
-      3: "Osmolar Gap",
-      4: "Diagnosis"
+      1: "initial_parameters",
+      2: "anion_gap",
+      3: "osmolar_gap",
+      4: "diagnosis"
     };
 
     trackStepView(currentStep, stepNames[currentStep] || `Step ${currentStep}`);

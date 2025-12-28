@@ -16,7 +16,7 @@ export const trackPageView = (path: string): void => {
 export const trackStepView = (step: number, stepName: string): void => {
     ReactGA.send({
         hitType: "pageview",
-        page: `step-${step}`,
+        page: `step_${step}`,
         title: stepName
     });
 };
