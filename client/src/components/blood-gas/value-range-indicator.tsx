@@ -22,11 +22,11 @@ export function ValueRangeIndicator({
   showLabels = true,
 }: ValueRangeIndicatorProps) {
   const range = max - min;
-  
+
   // Calculate positions as percentages
   const normalLowPosition = ((normalLow - min) / range) * 100;
   const normalHighPosition = ((normalHigh - min) / range) * 100;
-  const valuePosition = value !== undefined 
+  const valuePosition = value !== undefined
     ? Math.max(0, Math.min(100, ((value - min) / range) * 100))
     : null;
 
@@ -96,7 +96,7 @@ export function ValueRangeIndicator({
           {label === "pH" ? "Acidaemia" : "Low"}
         </span>
         <span className="text-clinical-green font-medium">
-          Normal ({normalLow} - {normalHigh})
+          Normal ({normalLow.toFixed(0)} - {normalHigh.toFixed(0)})
         </span>
         <span className="text-clinical-orange font-medium">
           {label === "pH" ? "Alkalaemia" : "High"}
@@ -109,16 +109,16 @@ export function ValueRangeIndicator({
           <span className={cn(
             "text-lg font-bold",
             value < normalLow ? "text-clinical-red" :
-            value > normalHigh ? "text-clinical-orange" :
-            "text-clinical-green"
+              value > normalHigh ? "text-clinical-orange" :
+                "text-clinical-green"
           )}>
             {value.toFixed(label === "pH" ? 2 : 1)} {unit}
           </span>
           <span className={cn(
             "ml-2 text-sm font-medium",
             value < normalLow ? "text-clinical-red" :
-            value > normalHigh ? "text-clinical-orange" :
-            "text-clinical-green"
+              value > normalHigh ? "text-clinical-orange" :
+                "text-clinical-green"
           )}>
             ({getZoneLabel()})
           </span>
