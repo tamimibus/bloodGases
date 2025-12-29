@@ -19,7 +19,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ValueRangeIndicator } from "../value-range-indicator";
 import { useWizard } from "../wizard-context";
 import { normalRanges } from "@shared/schema";
-import { determinePrimaryDisorder, formatDisorderName, validateHendersonHasselbalch, calculateWintersFormula, calculateMetabolicAlkalosisCompensation, calculateRespiratoryCompensation } from "@/lib/blood-gas-logic";
+import { interpretBloodGas, validateHendersonHasselbalch } from "@/lib/blood-gas-logic";
 import { cn } from "@/lib/utils";
 
 const initialSchema = z.object({
@@ -94,7 +94,8 @@ export function StepInitial() {
     updateInput({ pH: data.pH, pCO2: data.pCO2, HCO3: data.HCO3 });
 
     if (data.pH !== undefined && data.pCO2 !== undefined && data.HCO3 !== undefined) {
-      const disorder = determinePrimaryDisorder(data.pH, data.pCO2, data.HCO3);
+      const interpretation = interpretBloodGas({ pH: data.pH, pCO2: data.pCO2, HCO3: data.HCO3 });
+      const disorder = interpretation?.primaryDisorder;
       const isNormalPH = data.pH >= 7.35 && data.pH <= 7.45;
 
       if (disorder === "metabolic_acidosis" || isNormalPH) {
@@ -107,10 +108,12 @@ export function StepInitial() {
     }
   };
 
-  const preliminaryDisorder =
+  const interpretation =
     watchedPH !== undefined && watchedPCO2 !== undefined && watchedHCO3 !== undefined
-      ? determinePrimaryDisorder(watchedPH, watchedPCO2, watchedHCO3)
+      ? interpretBloodGas({ pH: watchedPH, pCO2: watchedPCO2, HCO3: watchedHCO3 })
       : null;
+
+  const preliminaryDisorder = interpretation?.primaryDisorder ?? null;
 
   const getDisorderInfo = (disorder: string | null) => {
     if (!disorder) return null;
@@ -337,7 +340,7 @@ export function StepInitial() {
                         <AlertTriangle className="h-5 w-5" />
                         <AlertTitle>Check for lab error</AlertTitle>
                         <AlertDescription>
-                          The calculated pH ({validation.calculatedPH.toFixed(2)}) differs from the entered pH ({watchedPH}) by more than 0.03. Please verify the values.
+                          The calculated pH ({validation.calculatedPH.toFixed(2)}) differs significantly from the entered pH ({watchedPH}) . Please consider a lab error.
                         </AlertDescription>
                       </Alert>
                     );
@@ -357,7 +360,7 @@ export function StepInitial() {
                   data-testid="disorder-interpretation"
                 >
                   <p className={cn("font-bold text-lg", disorderInfo.color)}>
-                    Primary Disorder: {formatDisorderName(preliminaryDisorder)}
+                    {interpretation?.summary}
                   </p>
                   <p className="text-sm text-foreground/80 mt-1">
                     {disorderInfo.description}
@@ -371,13 +374,13 @@ export function StepInitial() {
                     let title = "Expected Compensation";
 
                     if (preliminaryDisorder === "metabolic_acidosis") {
-                      compensationResult = calculateWintersFormula(watchedHCO3, watchedPCO2);
+                      compensationResult = interpretation?.wintersFormula ?? null;
                       title = "Winter's Formula (Expected pCO₂)";
                     } else if (preliminaryDisorder === "metabolic_alkalosis") {
-                      compensationResult = calculateMetabolicAlkalosisCompensation(watchedHCO3, watchedPCO2);
+                      compensationResult = interpretation?.compensation ?? null;
                       title = "Expected pCO₂";
                     } else if (preliminaryDisorder === "respiratory_acidosis" || preliminaryDisorder === "respiratory_alkalosis") {
-                      compensationResult = calculateRespiratoryCompensation(preliminaryDisorder, watchedPCO2, watchedHCO3);
+                      compensationResult = interpretation?.compensation ?? null;
                       title = "Expected HCO₃⁻";
                     }
 

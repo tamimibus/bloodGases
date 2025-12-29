@@ -90,6 +90,11 @@ export function StepDiagnosis() {
 
   const showCorrections = (showCorrectedSodium && correctedSodium) || (showCorrectedPotassium && correctedPotassium);
 
+  const hasRespiratoryAcidosis =
+    interpretation.primaryDisorder === "respiratory_acidosis" ||
+    interpretation.summary.toLowerCase().includes("respiratory acidosis") ||
+    interpretation.secondaryDisorders.some(d => d.toLowerCase().includes("respiratory acidosis"));
+
   return (
     <div className="space-y-6">
       {/* Primary Diagnosis Card */}
@@ -384,7 +389,7 @@ export function StepDiagnosis() {
 
       {/* Asthma Exacerbation Check */}
       {
-        input.pCO2 !== undefined && input.pCO2 > 35 && (
+        hasRespiratoryAcidosis && input.pCO2 !== undefined && input.pCO2 > 35 && (
           <Card className={`border-l-4 ${isAsthmaConcern === true ? "border-clinical-red bg-clinical-red-light/10" : "border-clinical-orange"}`}>
             <CardHeader>
               <CardTitle className="text-xl flex items-center gap-2">

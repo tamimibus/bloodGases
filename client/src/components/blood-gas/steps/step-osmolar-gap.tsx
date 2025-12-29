@@ -509,7 +509,7 @@ export function StepOsmolarGap() {
                 </div>
               )}
 
-              {isLowCalcOsm && (
+              {isLowCalcOsm && input.measuredOsmolality === undefined && (
                 <div className="p-4 rounded-lg bg-yellow-500/15 border border-yellow-500/50 flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
                   <div>
